@@ -1,0 +1,37 @@
+# A makefile to generate flame graphs from hprof stack traces.
+#
+# This makefile depends on: https://github.com/cykl/hprof2flamegraph
+# The required flamegraph.pl and stackcollapse-hprof are both included in the linked package.
+#
+# Usage: Place the makefile in a directory with hprof stack trace files,
+# renaming the makefile so that it is named "Makefile". The stack trace files
+# should be in text format.
+#
+# To generate a graph for a stack trace, run `make <name>.svg` where <name> is
+# the base name of the stack trace. For example, if your file is named
+# "test.hprof.txt", then you must run `make test.svg`.
+#
+# If you have several *.hprof.txt files in the directory, you can also run
+# `make` or `make all` to generate graphs for all of them.
+#
+# You can also use `make clean` to remove all generated graphs.
+
+
+
+GRAPH_WIDTH ?= 1600
+
+.PHONY: all
+all: $(subst .hprof.txt,.svg,$(wildcard *.hprof.txt))
+
+.PHONY: clean
+clean:
+	rm -f *.svg *.folded *.clean
+
+%.svg : %.folded
+	flamegraph.pl --title="$(basename $@) Flame Graph" --width=$(GRAPH_WIDTH) $< > $@
+
+%.folded : %.clean
+	stackcollapse-hprof $< > $@
+
+%.clean : %.hprof.txt
+	sed -r -e '/(avrora|python|\$py|Harness|harness|reflect|RRMain|com[.]ibm[.])/d' $< > $@

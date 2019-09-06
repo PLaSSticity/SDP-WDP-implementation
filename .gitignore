@@ -1,0 +1,22 @@
+
+# /
+/auto
+/build
+/docs
+/log
+/SDGs
+
+# /test/
+/test/*.class
+/classes/
+/tmp.java
+
+# LaTeX outputs
+*.aux
+*.log
+*.out
+*.pdf
+
+generateSDG
+/tmp/
+/paper.synctex.gz

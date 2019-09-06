@@ -1,0 +1,31 @@
+#!/bin/bash
+
+export RR_HOME=/br
+cd $RR_HOME
+export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/
+export RR_MODE=FAST
+export RR_TOOLPATH=`pwd`/classes/rr/simple:`pwd`/classes/tools
+
+
+TEST=$1
+if [ -z $TEST ] ; then
+        echo 'Please provide a classname to run an example. See the test directory for available examples.'
+    exit 1
+fi
+shift
+
+javac "test/$TEST.java"
+
+echo "RR Setup"
+echo "================================================"
+echo
+echo "JAVA_HOME   =  " $JAVA_HOME
+echo "JVM_ARGS    =  " $JVM_ARGS
+echo "RR_HOME     =  " $RR_HOME
+echo "RR_MODE     =  " $RR_MODE
+echo "RR_TOOLPATH =  " $RR_TOOLPATH
+echo
+echo "================================================"
+echo
+
+$RR_HOME/auto/bin/rrrun -brNoSDG -array=FINE -field=FINE $RR_EXTRA -noTidGC  $* -tool=WDC "test/$TEST"

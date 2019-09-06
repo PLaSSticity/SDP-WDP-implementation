@@ -1,0 +1,1013 @@
+\documentclass[letter,10pt]{article}
+
+\usepackage[top=0.65in, bottom=1.25in, left=1.5in, right=1.5in]{geometry}
+
+
+\usepackage{stackengine} %For stackunder in lemma-sketch
+
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\makeatletter
+\def\amsbb{\use@mathgroup \M@U \symAMSb}
+\makeatother
+\usepackage{bbold}
+\usepackage{array}
+\usepackage{xspace}
+\usepackage{xparse}
+\usepackage{ulem}
+
+\usepackage{enumerate}
+\usepackage{enumitem} %For continuing enumeration
+
+\newtheorem{thm}{Theorem}
+\newtheorem{lem}{Lemma}
+% \theoremstyle{definition}
+% \newtheorem{definition}{Definition}
+\newtheorem*{definition*}{Definition}
+
+\usepackage{color}
+\definecolor{darkgreen}{rgb}{0,0.4,0}
+\definecolor{darkred}{rgb}{0.4,0,0}
+
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode} %no end removes ``end while'' and ``end procedure'' text
+\algnewcommand{\LineComment}[1]{\hfill \(\triangleright\) #1} %comments were lead by # instead of triangleright
+\makeatletter
+\algnewcommand{\LineCommentx}[1]{\Statex \hskip\ALG@thistlm \(\triangleright\) #1}
+\algnewcommand{\LineCommentxx}[1]{\Statex \hskip\ALG@tlm \(\triangleright\) #1}
+\makeatother
+\algnewcommand{\lIf}[2] {\State \algorithmicif\ #1 \algorithmicthen\ #2} %Put if statement on a single line
+\algnewcommand{\lIfElse}[3] {\State \algorithmicif\ #1 \algorithmicthen\ #2 \algorithmicelse\ #3} %Put if else statement on a single line
+\algnewcommand{\lForAll}[2]{\State \algorithmicforall\ #1 \algorithmicdo\ #2} %Put for all statement ona  single line
+\algnewcommand\algorithmicforeach{\textbf{foreach}} %allows for each statements in algpseudocode package
+\algdef{S}[FOR]{ForEach}[1]{\algorithmicforeach\ #1\ \algorithmicdo}
+\algnewcommand{\lForEach}[2] {\State \algorithmicforeach\ #1 \algorithmicdo\ #2} %Put for each statement on a single line
+
+\newtoggle{techReport}
+%\toggletrue{techReport}
+\togglefalse{techReport}
+
+%Edges
+\usepackage{tikz}
+\usetikzlibrary{decorations.pathmorphing}
+\newcommand{\tikzmark}[1]{\tikz[remember picture, baseline] \node[inner sep=0pt, outer sep=0pt] (#1){};}
+\newcommand{\link}[2]{
+\begin{tikzpicture}[remember picture, overlay, >=stealth, shift={(0,0)}] 
+	\draw[arrows=->] (#1) to (#2); 
+\end{tikzpicture}}
+\newcommand{\textlink}[3]{
+\begin{tikzpicture}[remember picture, overlay, >=stealth, shift={(0,0)}] 
+	\draw[arrows=->] (#1) to node[sloped,anchor=center,above] {{\smaller #3}} (#2);
+\end{tikzpicture}}
+\newcommand{\squig}[2]{
+\begin{tikzpicture}[remember picture, overlay, >=stealth, shift={(0,0)}]
+	\draw[->,decorate,decoration={snake}] (#1) to (#2);
+\end{tikzpicture}}
+\newcommand{\forw}[2]{
+\begin{tikzpicture}[remember picture, overlay, >=stealth, shift={(0,0)}] 
+	\draw[dotted,arrows=->] (#1) to (#2); 
+\end{tikzpicture}}
+\newcommand{\back}[4]{
+\begin{tikzpicture}[remember picture, overlay, >=stealth, shift={(0,0)},circle dotted/.style={dash pattern=on 0.2mm off 1mm,line cap=round}] 
+	\draw[circle dotted,line width=0.5mm,arrows=->] (#1) to [out=#3,in=#4] (#2); 
+\end{tikzpicture}}
+\newcommand{\init}[4]{
+\begin{tikzpicture}[remember picture, overlay, >=stealth, shift={(0,0)}] 
+	\draw[dashed,arrows=->] (#1) to [out=#3,in=#4] (#2); 
+\end{tikzpicture}}
+\newcommand{\colorback}[5]{
+\begin{tikzpicture}[remember picture, overlay, >=stealth, shift={(0,0)}] 
+	\draw[#5,arrows=->] (#1) to [out=#3,in=#4] (#2); 
+\end{tikzpicture}}
+\newcommand{\rel}[1]{\tikz[remember picture,baseline=(char.base)]{\node[shape=circle,draw,inner sep=0.5pt] (char) {#1};}}
+\newcommand{\num}[1]{}
+
+
+\newcommand{\xxrightarrow}[1]{\raisebox{-2pt}{\;$\xrightarrow{#1}$\;}}
+
+%Rules
+\newcommand{\Approach}{Vindicator\xspace} % Ra{ce} P{redic}tor | Raptor was {Ra}ce {P}redic{tor}
+% \newcommand{\Approach}{Ceredic\xspace} % Ra{ce} P{redic}tor | Raptor was {Ra}ce {P}redic{tor}
+\newcommand{\approach}{\Approach}
+\newcommand{\Rule}[1]{rule~(#1)\xspace}
+\newcommand{\CS}[1]{\ensuremath{\mathit{CS(}#1)}\xspace}
+\newcommand{\lockset}[1]{\ensuremath{\mathit{lockset}(#1)}\xspace}
+\newcommand{\commonLocks}[2]{\ensuremath{\lockset{#1} \cap \lockset{#2}}}
+\newcommand{\lastwr}[2]{\ensuremath{\mathit{lastwr}_{#2}(#1)}\xspace}
+\newcommand{\conflicts}[2]{\ensuremath{#1 \asymp #2}} %\vdash is another option to use
+\newcommand{\getThread}[1]{\ensuremath{\mathit{thr}(#1)}\xspace}
+\newcommand{\getLock}[1]{\ensuremath{\mathit{L}(#1)}\xspace}
+\newcommand{\getAcquire}[1]{\ensuremath{\mathit{A}(#1)}\xspace}
+\newcommand{\getRelease}[1]{\ensuremath{\mathit{R}(#1)}\xspace}
+\newcommand{\getStatic}[1]{\ensuremath{\mathit{srcloc}(#1)}\xspace}
+\newcommand{\getDeps}[1]{\ensuremath{\mathit{deps}(#1)}\xspace}
+\DeclareDocumentCommand{\event}{mg}{\ensuremath{#1\IfValueT{#2}{#2}}\xspace}
+\newcommand{\race}{\WDC-race\xspace}
+\newcommand{\races}{\WDC-races\xspace}
+\newcommand{\Race}{\race}
+\newcommand{\Races}{\races}
+%There are two choices for path arrows here.
+%I kind of like \leadsto (which uses MnSymbol package) since it reads #1 leadsto #2, but the arrow curves at the head so that is weird.
+%\usepackage{MnSymbol} %doesn't work well with other packages. If enabled, will cause errors with subfloat in simple-WDC example.
+\newcommand{\dcpath}[3]{\ensuremath{#1 \leadsto_{#3} #2}\xspace}
+\newcommand{\edge}[2]{\ensuremath{(#1, #2)}\xspace}
+% \newcommand{\dcpath}[2]{\ensuremath{#1 \rightsquigarrow #2}\xspace}
+% \newcommand{\dist}[2]{\ensuremath{\mathit{d(#1 \leadsto #2)}}\xspace} 
+\newcommand{\dist}[2]{\ensuremath{\mathit{d(#1, #2)}}\xspace} 
+\newcommand{\held}{\textnormal{held}\xspace}
+\newcommand{\SA}[1]{\textcolor{red}{SA(#1)}\xspace}
+\newcommand{\static}{statically distinct\xspace}
+\newcommand{\conflictingEvents}{conflicting events\xspace}
+\newcommand{\conflictingEvent}{conflicting event\xspace}
+
+%Relations
+\newcommand{\DCdist}{\WDC-distance\xspace}
+\newcommand{\LWFull}{\textcolor{red}{Last Writer}\xspace}
+\newcommand{\LwFull}{\textcolor{red}{Last writer}\xspace}
+\newcommand{\LW}{\textcolor{red}{LW}\xspace}
+\newcommand{\LCFull}{Conflicting Acesses\xspace}
+\newcommand{\LcFull}{Conflicting accesses\xspace}
+\newcommand{\lcFull}{conflicting accesses\xspace}
+\newcommand{\LC}{CA\xspace}
+\newcommand{\LSFull}{Lock Semantics\xspace}
+\newcommand{\LsFull}{Lock semantics\xspace}
+\newcommand{\lsFull}{lock semantics\xspace}
+\newcommand{\LS}{LS\xspace}
+\newcommand{\tr}{\ensuremath{\mathit{tr}}\xspace}
+\newcommand{\trPrime}{\ensuremath{\mathit{tr'}}\xspace}
+\newcommand{\trDoublePrime}{\ensuremath{\mathit{tr''}}\xspace}
+\newcommand{\PO}{PO\xspace}
+\newcommand{\POFull}{Program-Order\xspace}
+\newcommand{\PoFull}{Program-order\xspace}
+\newcommand{\poFull}{program-order\xspace}
+\newcommand{\HB}{HB\xspace}
+\newcommand{\HBFull}{Happens-Before\xspace}
+\newcommand{\HbFull}{Happens-before\xspace}
+\newcommand{\hbFull}{happens-before\xspace}
+\newcommand{\CP}{CP\xspace}
+\newcommand{\CPFull}{Causally-Precedes\xspace}
+\newcommand{\cpFull}{causally-precedes\xspace}
+\newcommand{\WCP}{WCP\xspace}
+\newcommand{\WCPFull}{Weak-Causally-Precedes\xspace}
+\newcommand{\WcpFull}{Weak-causally-precedes\xspace}
+\newcommand{\wcpFull}{weak-causally-precedes\xspace}
+\newcommand{\WDC}{DC\xspace}
+\newcommand{\WDCFull}{Doesn't-Commute\xspace}
+\newcommand{\WdcFull}{Doesn't-commute\xspace}
+\newcommand{\wdcFull}{doesn't-commute\xspace}
+\newcommand{\WDCB}{\textcolor{red}{DC-B}\xspace}
+\newcommand{\WDCBFull}{\textcolor{red}{\WDCFull Backedge}\xspace}
+\newcommand{\BR}{BR\xspace}
+\newcommand{\WBR}{W\BR}
+
+%Copied Relations
+\newcommand{\DC}{\WDC}
+\newcommand{\DCFull}{\WDCFull}
+\newcommand{\dcFull}{\wdcFull}
+\newcommand{\DCOrdered}[2]{\WDCOrdered{#1}{#2}}
+\newcommand{\nDCOrdered}[2]{\nWDCOrdered{#1}{#2}}
+
+\newcommand\checkRace{\textsc{VindicateRace}\xspace}
+\newcommand\CheckRace{\checkRace}
+\hyphenation{Vin-di-cate-Race}
+\hyphenation{Re-Or-dered-Trace}
+\hyphenation{Add-Con-straints}
+\hyphenation{Has-Cycle}
+\hyphenation{Con-struct-Re-or-dered-Trace}
+
+%Ordering
+\newcommand{\ltTR}{\ensuremath{<_\textsc{\tr}}\xspace}
+\newcommand{\ltEqTR}{\ensuremath{\leq_\textsc{\tr}}\xspace}
+\newcommand{\nltTR}{\ensuremath{\not<_\textsc{\tr}}\xspace}
+\newcommand{\ltTRPrime}{\ensuremath{<_\textsc{\trPrime}}\xspace}
+\newcommand{\ltEqTRPrime}{\ensuremath{\leq_\textsc{\trPrime}}\xspace}
+\newcommand{\nltTRPrime}{\ensuremath{\not<_\textsc{\trPrime}}\xspace}
+
+\newcommand{\ltTRDoublePrime}{\ensuremath{<_\textsc{\trDoublePrime}}\xspace}
+
+\newcommand{\ltPO}{\ensuremath{\prec_\textsc{\tiny{\PO}}}\xspace}
+\newcommand{\ltEqPO}{\ensuremath{\preccurlyeq_\textsc{\tiny{\PO}}}\xspace}
+\newcommand{\nltPO}{\ensuremath{\not\prec_\textsc{\tiny{\PO}}}\xspace}
+\newcommand{\ltHB}{\ensuremath{\prec_\textsc{\tiny{\HB}}}\xspace}
+\newcommand{\nltHB}{\ensuremath{\not\prec_\textsc{\tiny{\HB}}}\xspace}
+\newcommand{\ltCP}{\ensuremath{\prec_\textsc{\tiny{\CP}}}\xspace}
+\newcommand{\ltWCP}{\ensuremath{\prec_\textsc{\tiny{\WCP}}}\xspace}
+\newcommand{\nltWCP}{\ensuremath{\not\prec_\textsc{\tiny{\WCP}}}\xspace}
+\newcommand{\ltWDC}{\ensuremath{\prec_\textsc{\tiny{\WDC}}}\xspace}
+\newcommand{\ltEqWDC}{\ensuremath{\preccurlyeq_\textsc{\tiny{\WDC}}}\xspace}
+\newcommand{\nltWDC}{\ensuremath{\not\prec_\textsc{\tiny{\WDC}}}\xspace}
+\newcommand{\ltBR}{\ensuremath{\prec_\textsc{\tiny{\BR}}}\xspace}
+\newcommand{\ltEqBR}{\ensuremath{\preccurlyeq_\textsc{\tiny{\BR}}}\xspace}
+\newcommand{\nltBR}{\ensuremath{\not\prec_\textsc{\tiny{\BR}}}\xspace}
+\newcommand{\ltWBR}{\ensuremath{\prec_\textsc{\tiny{\WBR}}}\xspace}
+\newcommand{\ltEqWBR}{\ensuremath{\preccurlyeq_\textsc{\tiny{\WBR}}}\xspace}
+\newcommand{\nltWBR}{\ensuremath{\not\prec_\textsc{\tiny{\WBR}}}\xspace}
+
+\newcommand{\Ordered}[3]{\ensuremath{#1 #2 #3}}
+\newcommand{\OrderedThree}[4]{\Ordered{#2}{#1}{\Ordered{#3}{#1}{#4}}}
+\newcommand{\TROrdered}[2]{\Ordered{#1}{\ltTR}{#2}}
+\newcommand{\EqTROrdered}[2]{\Ordered{#1}{\ltEqTR}{#2}}
+\newcommand{\nTROrdered}[2]{\Ordered{#1}{\nltTR}{#2}}
+\newcommand{\TRPrimeOrdered}[2]{\Ordered{#1}{\ltTRPrime}{#2}}
+\newcommand{\EqTRPrimeOrdered}[2]{\Ordered{#1}{\ltEqTRPrime}{#2}}
+\newcommand{\nTRPrimeOrdered}[2]{\Ordered{#1}{\nltTRPrime}{#2}}
+\newcommand{\POOrdered}[2]{\Ordered{#1}{\ltPO}{#2}}
+\newcommand{\EqPOOrdered}[2]{\Ordered{#1}{\ltEqPO}{#2}}
+\newcommand{\nPOOrdered}[2]{\Ordered{#1}{\nltPO}{#2}}
+\newcommand{\nHBOrdered}[2]{\Ordered{#1}{\nltHB}{#2}}
+\newcommand{\HBOrdered}[2]{\Ordered{#1}{\ltHB}{#2}}
+\newcommand{\CPOrdered}[2]{\Ordered{#1}{\ltCP}{#2}}
+\newcommand{\WCPOrdered}[2]{\Ordered{#1}{\ltWCP}{#2}}
+\newcommand{\nWCPOrdered}[2]{\Ordered{#1}{\nltWCP}{#2}}
+\newcommand{\WDCOrdered}[2]{\Ordered{#1}{\ltWDC}{#2}}
+\newcommand{\EqWDCOrdered}[2]{\Ordered{#1}{\ltEqWDC}{#2}}
+\newcommand{\nWDCOrdered}[2]{\Ordered{#1}{\nltWDC}{#2}}
+\newcommand{\BROrdered}[2]{\Ordered{#1}{\ltBR}{#2}}
+\newcommand{\EqBROrdered}[2]{\Ordered{#1}{\ltEqBR}{#2}}
+\newcommand{\nBROrdered}[2]{\Ordered{#1}{\nltBR}{#2}}
+\newcommand{\WBROrdered}[2]{\Ordered{#1}{\ltWBR}{#2}}
+\newcommand{\EqWBROrdered}[2]{\Ordered{#1}{\ltEqWBR}{#2}}
+\newcommand{\nWBROrdered}[2]{\Ordered{#1}{\nltWBR}{#2}}
+
+\newcommand{\code}[1]{\texttt{#1}}
+%Events
+\newcommand{\Write}[1]{\ensuremath{\code{wr(#1)}}}
+\newcommand{\Read}[1]{\ensuremath{\code{rd(#1)}}}
+\newcommand{\Acquire}[1]{\ensuremath{\code{acq(#1)}}}
+\newcommand{\Release}[1]{\ensuremath{\code{rel(#1)}}}
+\newcommand{\Sync}[1]{\ensuremath{\code{sync(#1)}}}
+\newcommand{\Branch}[1]{\ensuremath{\code{br(#1)}}}
+
+\newcommand\AcqT[2]{\Acquire{#1}\ensuremath{^\thr{#2}}}
+\newcommand\RelT[2]{\Release{#1}\ensuremath{^\thr{#2}}}
+\newcommand\ReadT[2]{\Read{#1}\ensuremath{^\thr{#2}}}
+\newcommand\WriteT[2]{\Write{#1}\ensuremath{^\thr{#2}}}
+\newcommand\SyncT[2]{\Sync{#1}\ensuremath{^\thr{#2}}}
+
+\newcommand{\AcqMQ}[3]{\ensuremath{\mathit{Acq}_{#1,#2}(#3)}\xspace}
+\newcommand{\RelMQ}[3]{\ensuremath{\mathit{Rel}_{#1,#2}(#3)}\xspace}
+\newcommand{\LockVarQ}[3]{\ensuremath{L_{#1,#2}^{#3}}\xspace}
+
+% Dependencies
+\newcommand\BrDepsOn[2]{\ensuremath{\getStatic{#2} \in \getDeps{#1}}}
+
+% For notes to ourselves that are useful when working on the paper
+\newcommand\notes[1]{\begin{quote}\textcolor{darkgreen}{\textbackslash \textbf{notes\{}} #1 \textcolor{darkgreen}{\}}\end{quote}}
+
+% For stuff we'll handle after the current deadline/version
+\newcommand\later[1]{\begin{quote}\textcolor{darkgreen}{\textbackslash \textbf{later\{}} #1 \textcolor{darkgreen}{\}}\end{quote}}
+
+\newcommand\todo[1]{\begin{quote}\textcolor{darkred}{\textbackslash \textbf{todo\{}} #1 \textcolor{darkred}{\}}\end{quote}}
+
+\newcommand{\originalgrumbler}[2]{\begin{quote}\textcolor{blue}{\sl{\bf #1 says:} #2}\end{quote}}
+\newcommand{\grumbler}[2]{\originalgrumbler{#1}{#2}}
+\newcommand{\mike}[1]{\grumbler{Mike}{#1}}
+\newcommand{\kaan}[1]{\grumbler{Kaan}{#1}}
+
+\begin{document}
+
+\section{Definitions}
+\paragraph{Last Writer:} Given a trace \tr, let \lastwr{\event{e}{}}{\tr} for a read \event{e}{} be the
+last write \event{e}{'} before \event{e}{}:
+\conflicts{\event{e}{}}{\event{e}{'}} and \TROrdered{\event{e}{}}{\event{e}{'}}
+and there exist no write \event{e}{''} such that
+\TROrdered{\event{e}{}}{\TROrdered{\event{e}{''}}{\event{e}{'}}} and
+\conflicts{\event{e}{}}{\event{e}{''}}.
+
+\paragraph{Read Dependence:} A read \event{e}{_2} depends on another read
+\event{e}{_1} iff there exists a write \event{e} such that
+\conflicts{\event{e}{_2}}{\event{e}} and
+\POOrdered{\event{e}{_1}}{\TROrdered{\event{e}}{\event{e}{_2}}}.
+
+\paragraph{Valid Reordering:} Given a trace \tr, a reordering \trPrime is valid if
+\begin{enumerate}
+\item For any events \event{e}{_1} and \event{e}{_2}, if
+  \POOrdered{\event{e}{_1}}{\event{e}{_2}} then
+  \TRPrimeOrdered{\event{e}{_1}}{\event{e}{_2}}.\label{valid-reorder-PO}
+\item For acquire events \event{e}{_1} and \event{e}{_2}, if
+  \TRPrimeOrdered{\event{e}{_1}}{\event{e}{_2}} then
+  \TRPrimeOrdered{\event{e}{_1}}{\TRPrimeOrdered{\getRelease{\event{e}{_1}}}{\event{e}{_2}}}. \label{valid-reorder-LS}
+\item For any branch $\event{b}{} \in \trPrime$, for every read \event{e}{} such
+  that \BrDepsOn{\event{b}{}}{\event{e}{}} and for every read that
+  \event{e} depends on, $\lastwr{\event{e}{}}{\tr} = \lastwr{\event{e}{}}{\trPrime}$.\label{valid-reorder-CA}
+\end{enumerate}
+
+\paragraph{Pseudo-Valid Reordering:} Given a trace \tr, a reordering \trPrime is
+pseudo-valid if it is valid except for Rule~\ref{valid-reorder-LS} of valid reordering rules.
+
+\paragraph{Pseudo-Predictable Race:} Given a trace \tr, for some events \event{e}
+and \event{e}{'} such that \conflicts{\event{e}}{\event{e}{'}} and
+$\commonLocks{\event{e}{}}{\event{e}{'}} = \emptyset$, if a pseudo-valid
+reordering \trPrime exists where \event{e} and \event{e}{'} are consecutive,
+then a pseudo-predictable race exists in \tr.
+
+% \kaan{
+% I believe the current definition of a pseudo-valid reordering is too weak to be
+% useful. It might be true that any trace that contains some conflicting accesses
+% must have a pseudo-predictable race.
+% \\
+% Consider an execution that contains only a pair of conflicting accesses,
+% protected by the same lock. This execution contains a pseudo-predictable race.
+% \\
+% Consider the same execution, with events added before and after the conflicting
+% pair. There is still a pseudo-predictable race.
+% \\
+% Again consider the same execution, but with events added between the conflicting
+% accesses. If the events we have added between them are not conflicting, then we
+% can create a pseudo-valid reordering where our conflicting events are
+% consecutive. If the events in the middle conflict with either access, or with
+% each other, then again there is a pseudo-predictable race.
+% \\
+% If this is correct, I think this could be resolved by changing the definition of
+% a race to require the accesses to have no common lock. This prevents us from
+% being able to say that any conflicting consecutive events must be a race, and we
+% have to talk about the locks that are held during these acceses, which in turn
+% will force us to look at the rules of DC. Otherwise, I believe it would be
+% possible to prove that even PO by itself is pseudo-sound.}
+
+
+\paragraph{\BR Race:} Events \event{e}{}, \event{e}{'} are a \BR race if
+\conflicts{\event{e}{}}{\event{e}{'}}, \nBROrdered{\event{e}{}}{\event{e}{'}},
+\nBROrdered{\event{e}{'}}{\event{e}{}}, and $\commonLocks{\event{e}{}}{\event{e}{'}} = \emptyset$.
+
+\section{Relations}
+
+Given a trace \tr, \textit{\BR} is the smallest relation that satisfies
+the following properties:
+
+\begin{enumerate}[label=(\alph*)]
+\item For release events \event{r}{_1} and \event{r}{_2} on the same lock, write \event{e}{_1} and read \event{e}{_2}: if
+  \TROrdered{\event{r}{_1}}{\event{e}{_2}}, $\event{e}{_1} \in CS(\event{r}{_1})$, $\event{e}{_2} \in CS(\event{r}{_2})$
+  and \conflicts{\event{e}{_1}}{\event{e}{_2}}, and there exists a
+  branch \event{b}{} such that \POOrdered{\event{e}{_2}}{\event{b}{}} and
+  \BrDepsOn{\event{b}{}}{\event{e}{_2}}, then \BROrdered{\event{r}{_1}}{\event{b}{}}.
+\item For release events \event{r}{_1} and \event{r}{_2}, if
+  \TROrdered{\event{r}{_1}}{\event{r}{_2}}, events read \event{e}{_1} and branch
+  \event{b}{} exist s.t. $\event{e}{_1},\event{b}{}\in\CS{\event{r}{_1}}$, and
+  write \event{e}{_2} exists s.t. $\event{e}{_2} \in \CS{\event{r}{_2}}$ and
+  \conflicts{\event{e}{_1}}{\event{e}{_2}}, then \BROrdered{\event{r}{_1}}{\event{r}{_2}}.
+\item For \Acquire{l} events \event{a}{_1}, \event{a}{_2} and their corresponding
+  releases \event{r}{_1}, \event{r}{_2}, if \BROrdered{\event{a}{_1}}{\event{r}{_2}},
+  then \BROrdered{\event{r}{_1}}{\event{r}{_2}}. \label{rel-rule-b}
+\item \BR is closed under composition with \HB: for
+  events \event{e}{_1}, \event{e}{_2} and \event{e}{_3}, if
+  \HBOrdered{\event{e}{_1}}{\BROrdered{\event{e}{_2}}{\event{e}{_3}}} or
+  \BROrdered{\event{e}{_1}}{\HBOrdered{\event{e}{_2}}{\event{e}{_3}}}
+  then \BROrdered{\event{e}{_1}}{\event{e}{_3}}. \label{rel-hb-comp}
+\end{enumerate}
+
+\paragraph{\WBR, an alternate definition of \BR that is unsound but may be pseudo-sound:}
+
+Given a trace \tr, \textit{\WBR} is the smallest relation that satisfies
+the following properties:
+
+\begin{enumerate}[label=(\alph*)]
+\item For release \event{r}{}, write \event{e}{_1} and read \event{e}{_2}: if
+  \TROrdered{\event{r}{}}{\event{e}{_2}}, $\event{e}{_1} \in CS(r)$
+  and \conflicts{\event{e}{_1}}{\event{e}{_2}}, and there exists a
+  branch \event{b}{} such that \POOrdered{\event{e}{_2}}{\event{b}{}} and
+  \BrDepsOn{\event{b}{}}{\event{e}{_2}}, then \WBROrdered{\event{r}{}}{\event{b}{}}.\label{rel:wbr:wr-rd}
+\item \sout{For release events \event{r}{_1} and \event{r}{_2}, if
+  \TROrdered{\event{r}{_1}}{\event{r}{_2}}, events read \event{e}{_1} and branch
+  \event{b}{} exist s.t. $\event{e}{_1},\event{b}{}\in\CS{\event{r}{_1}}$, and
+  write \event{e}{_2} exists s.t. $\event{e}{_2} \in \CS{\event{r}{_2}}$ and
+  \conflicts{\event{e}{_1}}{\event{e}{_2}}, then \WBROrdered{\event{r}{_1}}{\event{r}{_2}}.}
+\item \sout{For \Acquire{l} events \event{a}{_1}, \event{a}{_2} and their corresponding
+  releases \event{r}{_1}, \event{r}{_2}, if \WBROrdered{\event{a}{_1}}{\event{r}{_2}},
+  then \WBROrdered{\event{r}{_1}}{\event{r}{_2}}}.
+\item \WBR is closed under left composition with \DC: for
+  events \event{e}{_1}, \event{e}{_2} and \event{e}{_3}, if
+  \DCOrdered{\event{e}{_1}}{\WBROrdered{\event{e}{_2}}{\event{e}{_3}}},
+  then \WBROrdered{\event{e}{_1}}{\event{e}{_3}}. \label{rel:wbr:dc-left}
+  \kaan{Left-composing only with rule (a) of DC may be enough. We just need
+    something that actually orders conflicting events, and does ordering without
+    branches. If just rule (a) is enough, does that suggest that rule (a) of DC
+    + PO is pseudo-sound?}
+\item \WBR is closed under right composition with \PO: for
+  events \event{e}{_1}, \event{e}{_2} and \event{e}{_3}, if
+  \WBROrdered{\event{e}{_1}}{\POOrdered{\event{e}{_2}}{\event{e}{_3}}},
+  then \WBROrdered{\event{e}{_1}}{\event{e}{_3}}.\label{rel:wbr:po-right}
+\end{enumerate}
+
+\mike{I added the alternate \BR above, including the rule about read--write ordering,
+with the goal of trying to do the minimum to be pseudo-sound.
+I guess pseudo-sound should be defined here as obeying \PO and ``same last writer.''
+Note that, if needed, \checkRace could be extended to not only enforce \LS but also to enforce
+last writer, as part of \textsc{AddConstraints} and/or \textsc{ConstructReorderedTrace}.
+\medskip\\
+A simpler concept to consider is how we might extend \DC to still be pseudo-sound in way that \checkRace could still ensure soundness.
+The following alternate definition of \DC modifies only \Rule{a} to order only write--read conflicts:}
+
+\paragraph{Alternate definition of \DC that is weaker than \DC but still be pseudo-sound:}
+
+% \newcommand\DCprime{\DC{}'\xspace}
+
+Given a trace \tr, \textit{\DC} is the smallest relation that satisfies
+the following properties:
+
+\begin{enumerate}[label=(\alph*)]
+  \item \WDCOrdered{\event{r}{_1}}{\event{e}{_2}}
+  if $\event{e}{_1} \in \CS{\event{r}{_1}}$, $\event{e}{_2} \in \CS{\event{r}{_2}}$,
+  \event{r}{_1} and \event{r}{_2} are release events on the same lock,
+  \event{e}{_2} is a \textbf{read event},
+  \conflicts{\event{e}{_1}}{\event{e}{_2}}, and 
+  \TROrdered{\event{r}{_1}}{\event{r}{_2}}.
+  
+  \item \WDCOrdered{\event{r}{_1}}{\event{r}{_2}} if
+  \event{r}{_1} and \event{r}{_2} are release events on the same lock and
+  \WDCOrdered{\getAcquire{\event{r}{_1}}}{\event{r}{_2}}.
+  
+  \item \WDCOrdered{\event{e}{}}{\event{e}{'}}
+  if \POOrdered{\event{e}{}}{\event{e}{'}}.
+  
+  \item \WDCOrdered{\event{e}{}}{\event{e}{'}} 
+  if $\exists e'' \mid \WDCOrdered{\event{e}{}}{\event{e}{''}} \land \WDCOrdered{\event{e}{''}}{\event{e}{'}}$.
+\end{enumerate}
+
+\mike{Is this definition of \DC pseudo-sound?
+Is it complete w.r.t.\ a definition of correct reordering that uses a ``same last-writer'' rule?}
+
+\noindent
+Under this definition of \DC, events \event{e}{}, \event{e}{'} are a \textit{\DC-race} if
+$\conflicts{\event{e}{}}{\event{e}{'}} \land \nDCOrdered{\event{e}{}}{\event{e}{'}} \land
+\nDCOrdered{\event{e}{'}}{\event{e}{}} \land \commonLocks{\event{e}{}}{\event{e}{'}} = \emptyset$.
+
+\section{Algorithm}
+
+\newcommand{\addvc}{\sqcup}
+\newcommand{\lessvc}{\sqsubseteq}
+\newcommand{\slessvc}{\sqsubset}
+\newcommand{\forif}[4]{\textbf{foreach}\xspace \ensuremath{#1 \in #2} \textbf{if}\xspace \ensuremath{#3} \textbf{do}\xspace #4}
+\newcommand{\for}[3]{\textbf{foreach}\xspace \ensuremath{#1 \in #2} \textbf{do} #3}
+\newcommand{\update}[2]{\ensuremath{#1 \gets #1 #2}}
+
+\begin{algorithm}
+\caption{\hfill compute \BR using vector clocks}
+\small
+\begin{algorithmic}[1]
+\Procedure{acquire}{$t, l$}
+\State \update{\amsbb{H}_t}{\addvc \amsbb{H}_l}\label{alg:hb-acq}
+\State \update{\amsbb{P}_t}{\addvc \amsbb{P}_l}\label{alg:right-comp-hb-acq}
+\State \textbf{foreach}\xspace $t' \neq t$ \xspace\textbf{do} $Acq_l(t').Enque(\amsbb{C}_t)$\label{alg:rule-b-acq-enque}
+\EndProcedure
+
+\medskip
+
+\Procedure{release}{$t, l, R, W$}
+\While{$Acq_l(t).Front() \lessvc \amsbb{C}_t$}
+\State $Acq_l(t).Deque()$
+\State \update{\amsbb{P}_t}{\addvc Rel_l(t).Deque()}
+\EndWhile
+\State \for{x}{W}{\update{\amsbb{P}_t}{\addvc \amsbb{Q}_{t,x}}} \Comment{rd-wr edge, release to release}
+\State \for{x}{R}{\update{\amsbb{L}^r_{l,x}}{\addvc \amsbb{H}_t}}
+\State \for{x}{W}{\update{\amsbb{L}^w_{l,x}}{\addvc \amsbb{H}_t}}
+\State $\amsbb{H}_l \gets \amsbb{H}_t$ \label{alg:hb-rel}
+\State $\amsbb{P}_l \gets \amsbb{P}_t$ \label{alg:right-comp-hb-rel}
+\State \textbf{foreach}\xspace $t' \neq t$ \xspace\textbf{do} $Rel_l(t').Enque(\amsbb{H}_t)$\label{alg:rule-b-rel-enque}
+\EndProcedure
+\notes{Should we enque $\amsbb{P}_t$ on Line~\ref{alg:rule-b-rel-enque} instead?}
+
+\Procedure{read}{$t, x, L$}
+\State $\amsbb{B}^w_{t,x} \gets \addvc_{l \in L} \amsbb{L}^w_{l,x}$ \Comment{wr-rd edge, will later add on a branch}
+\State  \textbf{foreach}\xspace $t' \neq t$ \xspace\textbf{check}\xspace $\amsbb{W}_{x,t'} \lessvc \amsbb{C}_t \lor L^w_{x,t'}\cap L \neq \emptyset$
+\State $\amsbb{R}_{x,t} \gets \amsbb{C}_t$
+\State $L^r_{x,t} \gets L$
+\State \textbf{if} $\amsbb{P}_t \slessvc \amsbb{B}^w_{t,x}$ \textbf{do} $\update{D_t}{\cup \{<x,\getStatic{x}>\}}$
+\EndProcedure
+
+\Procedure{write}{$t, x, L$}
+\State $\amsbb{Q}_{t,x} \gets \addvc_{t' \neq t}\amsbb{B}^r_{t',x}$ \Comment{rd-wr edge, will later add on a release}
+\State $\amsbb{W}_{x,t} \gets \amsbb{C}_t$
+\State $L^w_{x,t} \gets L$
+\State \textbf{foreach}\xspace $t' \neq t$ \xspace\textbf{check}\xspace $(\amsbb{W}_{x,t'} \lessvc \amsbb{C}_t \lor L^w_{x,t'} \cap L \neq \emptyset)
+\land (\amsbb{R}_{x,t'} \lessvc \amsbb{C}_t \lor L^r_{x,t'} \cap L \neq \emptyset)$
+\EndProcedure
+
+\Procedure{branch}{$t, b, R, L$} \Comment{R is the set of reads so far in the outermost critical section.}\label{alg:proc-branch}
+\State \forif{<x,s>}{D_t}{s \in \getDeps{b}}{\update{\amsbb{P}_t}{\addvc \amsbb{B}^w_{t,x}}} \label{alg:wr-rd-edge} \Comment{wr-rd edge, write to branch}
+\State \forif{x}{R}{\BrDepsOn{b}{x}}{\update{\amsbb{B}^r_{t,x}}{\addvc \amsbb{H}_t}}
+\EndProcedure
+
+
+\end{algorithmic}
+\end{algorithm}
+
+$\amsbb{P}_t$ is the \BR clock, and $\amsbb{H}_t$ is the \HB
+clock associated with each thread. $\amsbb{L}^r_{l,x}$ and $\amsbb{L}^w_{l,x}$
+are read and write vector clocks which record the \HB times of all \Release{l}
+events so far that contain \Read{x} or \Write{x} events. $\amsbb{B}^r_{t,x}$ and
+$\amsbb{B}^w_{t,x}$ are ``delayed'' vector clocks which are used to store
+information for conflicting accesses until we are ready to add them: since the
+relation does not directly order accesses after releases, we have to store this
+information separately instead of directly adding it to $\amsbb{P}_t$ like \WCP.
+Similarly, $\amsbb{Q}_{t,x}$ tracks read-write conflicts, since these conflicts
+must first observe a read, followed by a branch, then a conflicting write. Once
+all these events are observed, $\amsbb{Q}_{t,x}$ stores the information until we
+see a release.
+$\amsbb{C}_t$ is a vector clock representing the time of the last event in
+thread $t$ so far. It is equivalent to $\amsbb{P}_t$ combined with the local
+clock of thread $t$, where the local clock is an integer counter that is
+incremented after each release event.
+%\mike{What exactly is $\amsbb{C}_t$? Is it $\amsbb{P}_t$ union \POOrdered{}{} (i.e., $\amsbb{P}_t$ unioned with the $t$ component of $\amsbb{H}_t$)?}
+
+$\amsbb{R}_{x,t}$ and $\amsbb{W}_{x,t}$ are the vector clocks for thread $t$ of the last read and write, and $L^r_{x,t}$
+and $L^w_{x,t}$ are the set of locks that were held by thread $t$ during the last read and write by for variable x. They are used to
+check the conditions for a \BR race.
+
+The variables $t$ and $l$ are the current thread and lock. $R$ and $W$ are the
+set of variables that were read in a critical section. $L$ is the set of locks
+that are held when a variable is being accessed. 
+
+\section{\BR Soundness Proof}
+
+
+
+\begin{thm}[\BR Soundness]
+  Given an execution \tr, if events
+  \event{e}{_1}, \event{e}{_2} exist
+%  \mike{The events should also be conflicting.}
+  such that
+  \TROrdered{\event{e}{_1}}{\event{e}{_2}},
+  \conflicts{\event{e}{_1}}{\event{e}{_2}},
+  \nBROrdered{\event{e}{_1}}{\event{e}{_2}}
+%  \mike{and \nBROrdered{\event{e}{_2}}{\event{e}{_1}}, or assume \TROrdered{\event{e}{_1}}{\event{e}{_2}}}
+  and $\commonLocks{\event{e}{_1}}{\event{e}{_2}} = \emptyset$, then there is a
+  predictable race or predictable deadlock.
+\end{thm}
+
+Let us prove the theorem by contradiction: assume that there is an execution \tr
+where events \event{e}{_1} and \event{e}{_2} are the first \BR race, and there
+is no predictable race.
+
+If \nHBOrdered{\event{e}{_1}}{\event{e}{_2}}, a predictable race
+exists. Then, based on our assumption, \HBOrdered{\event{e}{_1}}{\event{e}{_2}}.
+This shows that there must be a release \event{r}{_1} and acquire \event{a}{_2} such that
+\POOrdered{\event{e}{_1}}{\HBOrdered{\event{r}{_1}}{\POOrdered{\event{a}{_2}}{\event{e}{_2}}}}.
+
+\notes{We can use the same argument to show
+  \WCPOrdered{\event{e}{_1}}{\event{e}{_2}}, but I'm not sure if that is
+  actually useful since we're not composing with \WCP.}
+
+Let \trPrime be a valid reordering of \tr such that the number of events between
+\event{e}{_1} and \event{e}{_2}, and the number of events between \event{e}{_1}
+and any acquire \event{a}{} such that $\event{e}{_1} \in \CS{\event{a}}$ is
+minimized among all valid reorderings of \tr. We will call such a reordering an
+extremal reordering. To prove our theorem, we must show
+that either there are no events between \event{e}{_1} and \event{e}{_2} in
+\trPrime, or \BROrdered{\event{e}{_1}}{\event{e}{_2}}.
+
+\begin{lem}
+  For any event \event{e}{} such that
+  \OrderedThree{\ltTRPrime}{\event{e}{_1}}{\event{e}{}}{\event{e}{_2}}, it is true
+  that \OrderedThree{\ltHB}{\event{e}{_1}}{\event{e}{}}{\event{e}{_2}} and
+  \nBROrdered{\event{e}{}}{\event{e}{_2}}.
+  \label{lem:hb-between-e1-e2}
+\end{lem}
+
+Assume that \nHBOrdered{\event{e}{_1}}{\event{e}} or
+\nHBOrdered{\event{e}}{\event{e}{_2}}, then a reordering where \event{e} is
+located before \event{e}{_1} or after \event{e}{_2} is valid. Such a reordering
+has fewer events between \event{e}{_1} and \event{e}{_2}: since \trPrime is
+extremal, the assumption must be incorrect.
+
+Assume that \BROrdered{\event{e}}{\event{e}{_2}}. Since
+\HBOrdered{\event{e}{_1}}{\event{e}}, using Rule \ref{rel-hb-comp} we can get
+\BROrdered{\event{e}{_1}}{\event{e}{_2}}. This contradicts with our initial
+assumption that \nBROrdered{\event{e}{_1}}{\event{e}{_2}}, it must be incorrect.
+
+\notes{\WCP proves a stronger property here by using the right composition with
+  HB as well.}
+\todo{Update this lemma for right composition.}
+
+As a result of Lemma~\ref{lem:hb-between-e1-e2}, we can see that for
+every event \event{e} that is not a acquire/release event itself and
+\OrderedThree{\ltTRPrime}{\event{e}{_1}}{\event{e}}{\event{e}{_2}}, there must be
+some acquire \event{a} and release \event{r} such that
+\HBOrdered{\event{r}{_1}}{\POOrdered{\event{a}}{\POOrdered{\event{e}}{\HBOrdered{\event{r}}{\event{a}{_2}}}}}.
+
+\begin{lem}
+  For any acquire \event{a} and some event \event{e} such that
+  \OrderedThree{\ltTRPrime}{\event{a}}{\event{e}}{\event{e}{_1}}, it must be
+  that \OrderedThree{\ltHB}{\event{a}}{\event{e}}{\event{e}{_2}}.
+  \label{lem:hb-between-a1-e1}
+\end{lem}
+
+This lemma can be proven similarly to Lemma~\ref{lem:hb-between-e1-e2}. Assume that
+\nHBOrdered{\event{a}}{\event{e}} or \nHBOrdered{\event{e}}{\event{e}{_2}}, then
+placing these events before \event{a} or after \event{e}{_2} is a valid
+reordering. Since \trPrime is extremal, this assumption can not be correct.
+
+\begin{lem}
+  All pairs of events \event{e}{'} and \event{e}{''} that are before
+  \event{e}{_1} and \event{e}{_2} such that
+  \conflicts{\event{e}{'}}{\event{e}{''}} and
+  \TROrdered{\event{e}{'}}{\event{e}{''}}, there must be some release events
+  \event{r}{'} and \event{r}{''} such that
+  \POOrdered{\event{e}{'}}{\BROrdered{\event{r}{'}}{\event{r}{''}}} and either
+  $\event{e}{''} \in \CS{\event{r}{''}}$ or
+  \BROrdered{\event{e}{'}}{\event{e}{''}}, except for 3 cases:
+  \begin{itemize}
+    \item \event{e}{'} and \event{e}{''} are both writes.
+    \item \event{e}{'} is a write, \event{e}{''} is a read, and there is no
+      branch \event{b}{''} such that
+      \POOrdered{\event{e}{''}}{\POOrdered{\event{b}{''}}{\event{r}{''}}}.
+    \item \event{e}{'} is a read, \event{e}{''} is a write, and there is no
+      branch \event{b}{'} such that \POOrdered{\event{e}{'}}{\POOrdered{\event{b}{'}}{\event{r}{'}}}.
+  \end{itemize}
+\end{lem}
+
+Since \event{e}{_1}, \event{e}{_2} is the first \BR race in \tr, any conflicting
+events before them must not be a \BR race. Note that we can't state that the
+critical section of \event{r}{'} contains \event{e}{'}.
+
+\mike{I'm confused by the above. It covers some cases but not others (since it has 3 exceptions); how does the theorem use it and deal with the exceptions?}
+
+\notes{WCP has a much stronger lemma here. We can become stronger by adding in wr-wr
+  edges, and requiring rd-wr edges even when the critical section doesn't have a
+  branch, and conservatively adding wr-rd edges to a release when there
+  are no branches.}
+
+\paragraph{Minimal Trace:}
+Let \event{f} be the first event such that
+\TRPrimeOrdered{\event{e}{_1}}{\event{f}} and
+\nPOOrdered{\event{e}{_1}}{\event{f}}. By Lemma~\ref{lem:hb-between-e1-e2},
+\HBOrdered{\event{e}{_1}}{\HBOrdered{\event{f}}{\event{e}{_2}}} and \event{f}
+must be an acquire event. \event{f} must exist, otherwise
+\nHBOrdered{\event{e}{_1}}{\event{e}{_2}} (at the very least, there is \event{a}{_2}).
+
+Among all extremal traces, let the trace where the number of elements between
+\event{e}{_1} and \event{f} are minimal to be the minimal trace. Starting at
+this point, \trPrime will refer to a minimal trace.
+
+\notes{\CP, although their proof is incorrect, uses right-composition with \HB
+  by showing \WCPOrdered{\event{e}{_1}}{\HBOrdered{\event{f}}{\event{e}{_2}}} in
+  some cases. We must instead always show that
+  \BROrdered{\event{f}{'}}{\event{e}{_2}}}.
+
+\todo{Current proof doesn't use this definition at all.}
+
+% WCP Lemma 4?
+\begin{lem}
+\end{lem}
+
+\begin{lem}
+  There can't be a critical section that starts after \event{e}{_1} and before
+  \event{e}{_2} but ends after \event{e}{_2}.
+\end{lem}
+
+Assume there is such a critical section. By Lemma~\ref{lem:hb-between-e1-e2}, it
+must contain a nested critical section: if it contains an event that is not an
+acquire or release, that event must be in a critical section that is entirely
+between \event{e}{_1} and \event{e}{_2}. If it does not contain such an event,
+then \trPrime is not extremal.
+
+\todo{Argue that we can either exclude that critical section from the
+  reordering, or that it is ordered by \BR.}
+
+\paragraph{Proof:} Let \event{g} be the earliest event such that
+\OrderedThree{\ltTRPrime}{\event{e}{_1}}{\event{g}}{\event{e}{_2}} and \POOrdered{\event{g}}{\event{e}{_2}}. Let $G$ be
+the set of events between \event{g} and \event{e}{_2}, excluding \event{e}{_2}
+but including \event{g}.
+
+Let $\event{f}\ldots\event{f}{'}$ be the last critical section between
+\event{e}{_1} and \event{g}. Let $F$ be this set of events.
+\nPOOrdered{\event{f}{'}}{\event{g}}, otherwise this is a contradiction with the
+definition of \event{g}. By Lemma~\ref{lem:hb-between-e1-e2},
+\HBOrdered{\event{e}{_1}}{\event{f}}.
+
+If $F$ contains a write, and $G$ contains a conflicting read and a dependent
+branch. Then, \BROrdered{\event{f}{'}}{\event{e}{_2}}. Otherwise, a reordering
+where $F$ is not included is valid.
+
+\todo{This shows we can remove everything between \event{e}{_1} and \event{g}.
+  We must now prove that we can reorder $G$ before \event{e}{_1}.}
+
+\section{\WBR Pseudo-Soundness Proof}
+
+Given an execution \tr, let a \emph{pseudo-predictable race} be a race (consecutive conflicting accesses) that occurs in a
+pseudo-valid reordering \trPrime.
+
+\begin{thm}[\WBR Pseudo-Soundness]
+  If an execution \tr has a \WBR-race,
+  then it has a pseudo-predictable race.
+  \label{thm:wbr-pseudo-sound}
+\end{thm}
+
+\begin{proof}
+
+Let us prove the theorem by contradiction. Suppose that there is an execution \tr
+with a \WBR-race but \emph{no} pseudo-predictable race.
+Let \event{e}{_1} and \event{e}{_2} be the \emph{first} \WBR-race in \tr.
+So
+\TROrdered{\event{e}{_1}}{\event{e}{_2}},
+\conflicts{\event{e}{_1}}{\event{e}{_2}},
+\nWBROrdered{\event{e}{_1}}{\event{e}{_2}},
+$\commonLocks{\event{e}{_1}}{\event{e}{_2}} = \emptyset$,
+and there does not exist a \WBR-race \nWBROrdered{\event{e}{}}{\event{e}{'}} such that \TROrdered{\event{e}{'}}{\event{e}{_2}}
+nor a \WBR-race \nWBROrdered{\event{e}{}}{\event{e}{_2}} such that
+\TROrdered{\event{e}{_1}}{\event{e}{}}.
+\kaan{I don't think we ever rely on the assumption that there are no earlier
+  \WBR-races, just that there are no pseudo-predictable races. Same for \DC's
+  pseudo-soundness proof.}
+
+If \nDCOrdered{\event{e}{_1}}{\event{e}{_2}}, then
+by Theorem~\ref{thm:dc-pseudo-sound}, there would be a pseudo-predictable race,
+which is a contradiction.
+Thus \DCOrdered{\event{e}{_1}}{\event{e}{_2}}.
+
+\paragraph{Minimal reordering.}
+
+Let \trPrime be a pseudo-valid reordering of \tr such that the number of events
+between \event{e}{_1} and \event{e}{_2} is minimized among all pseudo-valid
+reorderings of \tr, and \event{e}{_2} is the last event in \trPrime
+(i.e., $\nexists \event{e} \mid \TRPrimeOrdered{\event{e}{_2}}{\event{e}}$).
+Let us call such a reordering a \emph{minimal reordering}.
+
+Since \tr does not have a pseudo-predictable race,
+\event{e}{_1} and \event{e}{_2} cannot be consecutive in \trPrime,
+i.e., $\exists \event{e}{} \mid \TRPrimeOrdered{\event{e}{_1}}{\TRPrimeOrdered{\event{e}{}}{\event{e}{_2}}}$.
+
+% To prove the theorem, we
+% must show that the initial assumptions lead to contradiction by showing that
+% \WBROrdered{\event{e}{_1}}{\event{e}{_2}} or that there are no events between
+% \event{e}{_1} and \event{e}{_2} in the minimal trace.
+% \mike{Actually any contradiction will do. :)}
+
+To help prove the theorem, we use the following lemma:
+
+\begin{lem}
+  Given a pseudo-valid trace \trPrime that has no pseudo-predictable races
+  \mike{Seems weird to talk about whether \trPrime has pseudo-predictable races.
+  If \tr has no pseudo-predictable races, then a pseudo-valid reordering of \tr should have no pseudo-predictable races, although we haven't established that formally.}
+  and
+  that is minimal with respect to the number of events between \event{e}{_1} and
+  \event{e}{_2}, for any event \event{e} such that
+  \TRPrimeOrdered{\event{e}{_1}}{\TRPrimeOrdered{\event{e}}{\event{e}{_2}}}, it
+  is true that \DCOrdered{\event{e}{_1}}{\DCOrdered{\event{e}}{\event{e}{_2}}}.
+  \mike{Do \DC and other partial orders here apply to the original trace \tr or the reordered trace \trPrime?
+  (It seems like circular reasoning to me to assume that it doesn't matter.)}
+%  \sout{and \nWBROrdered{\event{e}}{\event{e}{_2}}}.
+  \label{lem:wbr:dc-between-e1-e2}
+\end{lem}
+
+\begin{proof}[Proof of lemma]
+
+  We prove the lemma by contradiction.
+  Let \event{e} be the \emph{first} event in \trPrime such
+  \TRPrimeOrdered{\event{e}{_1}}{\TRPrimeOrdered{\event{e}}{\event{e}{_2}}} and
+  \nDCOrdered{\event{e}{_1}}{\event{e}}.
+  % Assume that such an event exists.
+  Consider a trace \trDoublePrime that is the
+  same as \trPrime except that \event{e} is ordered immediately before \event{e}{_1}.
+  \trDoublePrime cannot be a pseudo-valid reordering of \tr because
+  i.e., \trDoublePrime would have fewer events between \event{e}{_1} and \event{e}{_2} than \trPrime,
+  violating the minimality assumption of \trPrime.
+  \trDoublePrime is \emph{not} a pseudo-valid reordering because it violates
+  at least one of the two rules of pseudo-valid reordering (Definition~\ref{??}):
+
+  \subparagraph{Case 1:}
+  \trDoublePrime violates the \PO rule.
+  
+  Then there must exist an event \event{e}{'} such that
+  \EqTRPrimeOrdered{\event{e}{_1}}{\TRPrimeOrdered{\event{e}{'}}{\event{e}}} and \POOrdered{\event{e}{'}}{\event{e}}.
+  Since \EqTRPrimeOrdered{\event{e}{_1}}{\TRPrimeOrdered{\event{e}{'}}{\event{e}}} and
+  \event{e} is the first event such that \nDCOrdered{\event{e}{_1}}{\event{e}}, 
+  therefore $\DCOrdered{\event{e}{_1}}{\event{e}{'}} \lor \event{e}{_1} = \event{e}{'}$. By Rule~(c) of
+  \DC, \DCOrdered{\event{e}{'}}{\event{e}}, and using Rule~(d) we get
+  \DCOrdered{\event{e}{_1}}{\event{e}}, which is a contradiction.
+
+  \subparagraph{Case 2:}
+  \trDoublePrime violates the LW rule.
+  
+  If \trDoublePrime violates CA,
+  then there must be an event \event{e}{'} such that
+  \EqWDCOrdered{\event{e}{_1}}{\event{e}{'}} and
+  \conflicts{\event{e}{'}}{\event{e}}. Note that $\event{e}{_1}=\event{e}{'}$ is
+  possible.
+  We know that \nDCOrdered{\event{e}{'}}{\event{e}} because otherwise \DCOrdered{\event{e}{_1}}{\event{e}} by \DC Rule~(d),
+  which would be a contradiction.
+  Let $L=\commonLocks{\event{e}{}}{\event{e}{'}}$. If $L=\emptyset$,
+  then by Theorem~\ref{thm:dc-pseudo-sound}, \tr has pseudo-predictable race,
+  which is a contradiction.
+  \mike{Added use of Theorem~\ref{thm:dc-pseudo-sound} here, since it seemed like we needed it. Did I miss another way you were making this argument?}
+  
+  Otherwise
+  $L\neq\emptyset$.
+  % Let $l \in L$. There must exist release events \event{r}{'}
+  % and \event{r} on $l$ such that
+  % \POOrdered{\event{e}{'}}{\TROrdered{\event{r}{'}}{\POOrdered{\event{e}}{\event{r}}}}.
+  % Then, using \DC Rule (a) it must be that \DCOrdered{\event{r}{'}}{\event{e}}, and by \DC Rule (c)
+  Then by \DC Rule~(a), we have \DCOrdered{\event{e}{'}}{\event{e}} and thus
+  by \DC Rule~(d) \DCOrdered{\event{e}}{\event{e}{_1}}, which is a contradiction.
+
+  \medskip
+  \noindent
+  Thus all cases lead to contradiction, so therefore
+  \DCOrdered{\event{e}{_1}}{\event{e}} for any \event{e} such that
+  \TRPrimeOrdered{\event{e}{_1}}{\TRPrimeOrdered{\event{e}}{\event{e}{_2}}}.
+
+  A similar argument can be repeated for \event{e} and \event{e}{_2}, which will
+  prove that \DCOrdered{\event{e}}{\event{e}{_2}}.
+% %
+  \todo{This section should be expanded to show that
+    \DCOrdered{\event{e}}{\event{e}{_2}}.
+  \mike{Seems like we don't need that? Can we instead just narrow the lemma statement?}}
+% %
+\end{proof}
+
+\noindent
+With this lemma proved,
+we can now prove the theorem.
+
+% There can not be an event \event{e} such that
+% \EqTRPrimeOrdered{\event{e}{_1}}{\TRPrimeOrdered{\event{e}}{\event{e}{_2}}}
+% and \nPOOrdered{\event{e}}{\event{e}{_2}}.
+% Assume that such an event exists. Let \event{e} be the last such event.
+
+Let \event{e} be the last event in \trPrime such that
+\EqTRPrimeOrdered{\event{e}{_1}}{\TRPrimeOrdered{\event{e}}{\event{e}{_2}}}
+and \nPOOrdered{\event{e}}{\event{e}{_2}}.
+(Such an event must exist because of the possibility that $\event{e} = \event{e}{_1}$.)
+
+We consider the following exhaustive set of cases:
+
+\subparagraph{Case 1:}
+$\event{e} = \event{e}{_1}$
+
+Then let \event{e}{'} be the event immediately following \event{e}{_1} in \trPrime
+(i.e., $\TRPrimeOrdered{\event{e}{_1}}{\TRPrimeOrdered{\event{e}{'}}\event{e}{_2}} \land
+\nexists \event{e}{''} \mid \TRPrimeOrdered{\event{e}{_1}}{\TRPrimeOrdered{\event{e}{''}}{\event{e}{'}}}$).
+Since there is no event between \event{e}{_1} and \event{e}{_2} that is not \PO ordered to \event{e}{_2},
+therefore \POOrdered{\event{e}{'}}{\event{e}{_2}}.
+Reordering consecutive events \event{e}{_1} and \event{e}{'} cannot
+produce a pseudo-valid reordered trace because \trPrime is a minimal trace.
+Thus it must be the case that \conflicts{\event{e}{_1}}{\event{e}{'}},
+% \mike{Rather than contradicting the assumption of no earlier \WBR-race,
+%   doesn't this simply violate the assumption of no predictable race? Revised accordingly.
+%   \kaan{Yes.}}
+which implies that \tr has a predictable race, which contradicts an initial assumption.
+
+\subparagraph{Case 2:}
+$\event{e} \ne \event{e}{_1}$, and \event{e}{} is a write event
+
+Since \trPrime is a minimal trace,
+it must be the case that \event{e} cannot be moved to immediately after \event{e}{_2}
+to produce a new pseudo-valid reordered trace.
+By the defintion of a pseudo-valid reordered trace,
+there must exist read event \event{e}{'} and branch event \event{e}{''} such that
+\BrDepsOn{\event{e}{'}}{\event{e}{''}},
+\TRPrimeOrdered{\event{e}}{\POOrdered{\event{e}{'}}{\POOrdered{\event{e}{''}}{\event{e}{_2}}}},
+and \conflicts{\event{e}}{\event{e}{'}}.
+By Rule~\ref{rel:wbr:wr-rd} of the \WBR definition,
+we have \WBROrdered{\event{e}}{\event{e}{''}},
+which implies \WBROrdered{\event{e}}{\event{e}{_2}}
+by Rule~\ref{rel:wbr:po-right}.
+By Lemma~\ref{lem:wbr:dc-between-e1-e2}, we have
+\DCOrdered{\event{e}{_1}}{\event{e}}.
+Finally, Rule~\ref{rel:wbr:dc-left} of \WBR
+implies that \WBROrdered{\event{e}{_1}}{\event{e}{_2}},
+which contradicts an initial assumption.
+
+% Assume that \event{e} is a write. If there is no read \event{e}{'} and branch
+% \event{e}{''} such that
+% \TRPrimeOrdered{\event{e}}{\POOrdered{\event{e}{'}}{\POOrdered{\event{e}{''}}{\event{e}{_2}}}}
+% and \conflicts{\event{e}}{\event{e}{'}}, then there exists a pseudo-valid
+% reordering where \event{e} is ordered after \event{e}{_2}: such a reordering
+% does not change the last writer of any read with a dependent branch. This shows
+% that if $\event{e} = \event{e}{_1}$ then there exists a predictable race, or
+% $\event{e} \neq \event{e}{_1}$ and this
+% contradicts the definition of a minimal reordering and such an \event{e} can
+% not exist. If \event{e}{'} and \event{e}{''} both do exist, then using
+% Rule~\ref{rel:wbr:wr-rd} we have \WBROrdered{\event{e}}{\event{e}{''}}. Using
+% Rule~\ref{rel:wbr:po-right} and Lemma~\ref{lem:wbr:dc-between-e1-e2}, we have
+% \WBROrdered{\event{e}{_1}}{\event{e}{_2}}. This is a contradiction of the
+% theorem statement.
+
+\subparagraph{Case 3:}
+$\event{e} \ne \event{e}{_1}$, and \event{e}{} is \emph{not} a write event
+
+By the definition of a pseudo-valid reordered trace,
+\event{e}{} can be moved after \event{e}{_2} in a pseudo-valid reordered trace,
+which contradicts the assumption of a minimal trace.
+
+% For any other \event{e}, there always exists a pseudo-valid reordering where
+% \event{e} can be reordered after \event{e}{_2}. If \event{e} is a branch,
+% acquire or release, then it can be reordered. Using the definition of a minimal
+% reordering there can not be an event \event{e}{'} that is
+% \POOrdered{\event{e}}{\event{e}{'}}, as \event{e} is the last event in its
+% thread before \event{e}{_2}. Then, if \event{e} is a read there is no
+% branch that depends on \event{e} in \trPrime, and there exists a pseudo-valid
+% reordering where \event{e} is after \event{e}{_2}. In any of these cases, a reordering with fewer events between \event{e}{_1} and
+% \event{e}{_2} exists or $\event{e} = \event{e}{_1}$ and a pseudo-predictable
+% race exists, both of which are contradictions.
+
+\medskip
+\noindent
+Thus all cases lead to contradiction, so \tr must have a pseudo-predictable race.
+\end{proof}
+
+
+\section{\DC Pseudo-Soundness Proof}
+
+\begin{thm}
+  If an execution \tr has a \DC-race,
+  it has a pseudo-predictable race.
+\label{thm:dc-pseudo-sound}
+\end{thm}
+
+\begin{proof}
+  Let us prove the theorem by contradiction. Suppose that there is an execution
+  \tr with a \DC-race but \emph{no} pseudo-predictable race. Let \event{e}{_1}
+  and \event{e}{_2} be the \emph{first} \DC-race in \tr. So
+  \TROrdered{\event{e}{_1}}{\event{e}{_2}},
+  \conflicts{\event{e}{_1}}{\event{e}{_2}},
+  \nDCOrdered{\event{e}{_1}}{\event{e}{_2}},
+  and there does not
+  exist a \DC-race \nWDCOrdered{\event{e}{}}{\event{e}{'}} such that
+  \TROrdered{\event{e}{'}}{\event{e}{_2}} nor a \DC-race
+  \nWDCOrdered{\event{e}{}}{\event{e}{_2}} such that
+  \TROrdered{\event{e}{_1}}{\event{e}{}}.
+
+  Let \trPrime be a pseudo-valid minimal reordering of \tr such that the number
+  of events between \event{e}{_1} and \event{e}{_2} are minimized across all
+  pseudo-valid reorderings. As there is no pseudo-predictable race in the
+  execution, there must be some event \event{e} such that
+  \TRPrimeOrdered{\event{e}{_1}}{\TRPrimeOrdered{\event{e}}{\event{e}{_2}}},
+  otherwise a pseudo-valid reordering where a race occurs exists which is a contradiction.
+
+  \trPrime is pseudo-valid and minimal in respect to \event{e}{_1} and
+  \event{e}{_2}, and
+  \TRPrimeOrdered{\event{e}{_1}}{\TRPrimeOrdered{\event{e}}{\event{e}{_2}}}.
+  Therefore using Lemma~\ref{lem:dc-between-e1-e2},
+  \mike{Note that the Lemma~\ref{lem:wbr:dc-between-e1-e2} proof now uses this theorem (it seemed necessary to me),
+  so this proof can't use Lemma~\ref{lem:wbr:dc-between-e1-e2}.}
+  it must be true that
+  \DCOrdered{\event{e}{_1}}{\DCOrdered{\event{e}}{\event{e}{_2}}}. Then using
+  rule (d) of \DC we have \DCOrdered{\event{e}{_1}}{\event{e}{_2}}, which is a
+  contradiction of our initial assumption.
+\end{proof}
+
+% \kaan{Commenting out the following theorem as it is not currently used by WBR
+% Pseudo-Soundness proof. The theorem and it's proof appears to be correct, but
+% not directly useful for our proof as it doesn't allow us to show whether a
+% reordering violates minimal-ness.}
+%
+% \begin{thm}
+%   Given an execution \tr with events \event{e} and \event{e}{'} such that \TROrdered{\event{e}}{\event{e}{'}} and
+%   \nDCOrdered{\event{e}}{\event{e}{'}} and no pseudo-predictable
+%   races exist in \tr, % up to and including \event{e} and \event{e}{'},
+%   there exists a pseudo-valid reordering \trPrime where
+%   \TRPrimeOrdered{\event{e}{'}}{\event{e}}.
+% \label{thm:dc-allows-reordering}
+% \end{thm}
+
+
+% Consider the first event \event{e}{''} such that
+% \TROrdered{\event{e}}{\EqTROrdered{\event{e}{''}}{\event{e}{'}}} and
+% \nDCOrdered{\event{e}}{\event{e}{''}}.
+% If \conflicts{\event{e}}{\event{e}{''}}
+% then \DCOrdered{\event{e}}{\event{e}{''}} or there exists a pseudo-predictable
+% race according to Theorem~\ref{thm:dc-pseudo-sound}, both of which are contradictions.
+
+% Otherwise, if an event \event{x} exists such that
+% \DCOrdered{\event{e}}{\TROrdered{\event{x}}{\event{e}{''}}} and
+% \conflicts{\event{e}}{\event{x}}, similarly \DCOrdered{\event{x}}{\event{e}{''}} which
+% using Rule (4) of \DC gives us \DCOrdered{\event{e}}{\event{e}{''}} or a
+% pseudo-predictable race exists, both again contradictions.
+
+% Therefore, \event{e} and \event{e}{''} do not conflict and no such \event{x}
+% exists. Then, a reordering where \event{e}{''} is ordered before \event{e} must
+% be valid, as no conflicting events will be reordered.
+
+\section{Confirmed \BR-only races}
+
+\paragraph{pmd9.}
+
+\texttt{org/jaxen/XPathFunctionContext.instance} is a singleton. It first gets
+initialized on a call to
+\texttt{net.sourceforge.pmd.jaxen.MatchesFunction.registerSelfInSimpleContext}.
+This function is called by the threads created by the thread pool in
+\texttt{net.sourceforge.pmd.PMD.processFiles}. There is no synchronization
+between the classes for the initialization of the singleton, and the main thread
+does not initialize the singleton either.
+
+\paragraph{avrora9.}
+
+\texttt{avrora.sim.radio.Medium.Transmitter.Ticker.beginTransmit()} creates a
+transmission and places it into the \texttt{Medium}'s \texttt{transmissions}
+list. \texttt{fire()} method of the same class writes into
+\texttt{transmission.data} array.
+\texttt{avrora.sim.radio.Medium.Receiver.Ticker.deliverByte()} calls
+\texttt{medium.arbitrator.mergeTransmissions()}, where \texttt{arbitrator} is an
+instance of \texttt{Medium.BasicArbitrator}.
+\texttt{arbitrator.mergeTransmissions()} calls
+\texttt{transmission.getByteAtTime()}, which reads from
+\texttt{transmission.data}. While \texttt{medium.transmissions} is correctly
+protected by the lock, there is no synchronization on \texttt{transmission.data}
+and nothing preventing a transmitter and receiver from accessing it at the same
+time. Transmitters and receivers are on different threads.
+
+
+\end{document}
