@@ -256,12 +256,6 @@ public class RR {
 	public static final CommandLineOption<Boolean> dcNWC_WBROption =
 			CommandLine.makeBoolean("dcNWC_WBR", false, CommandLineOption.Kind.EXPERIMENTAL, "Enable NWC analysis and WBR analysis." );
 
-	public static final CommandLineOption<Boolean> dcuDPOption =
-			CommandLine.makeBoolean("dcuDP", false, CommandLineOption.Kind.EXPERIMENTAL, "Enable uDP analysis: DP w/o branches.");
-
-	public static final CommandLineOption<Boolean> dcWCP_uDPOption =
-			CommandLine.makeBoolean("dcWCP_uDP", false, CommandLineOption.Kind.EXPERIMENTAL, "Enable WCP analysis and uDP analysis.");
-	
 	public static final CommandLineOption<Boolean> dcWCP_WBROption =
 			CommandLine.makeBoolean("dcWCP_WBR", false, CommandLineOption.Kind.EXPERIMENTAL, "Enable WCP analysis and DP analysis.");
 
@@ -276,12 +270,6 @@ public class RR {
 
 	public static final CommandLineOption<Boolean> dcWCP_NWC_WBROption =
 			CommandLine.makeBoolean("dcWCP_NWC_WBR", false, CommandLineOption.Kind.EXPERIMENTAL, "Enable WCP analysis, SDP analysis and WDP analysis.");
-
-	public static final CommandLineOption<Boolean> dcWCP_DC_uDP_WBROption =
-			CommandLine.makeBoolean("dcWCP_DC_uDP_WBR", false, CommandLineOption.Kind.EXPERIMENTAL, "Enable WCP analysis, DC analysis, uDP analysis, DP analysis.");
-	
-	public static final CommandLineOption<Boolean> dcWCP_DC_WBR_LSHEOption =
-			CommandLine.makeBoolean("dcWCP_DC_WBR_LSHE", false, CommandLineOption.Kind.EXPERIMENTAL, "Enable WCP analysis, DC analysis, DP analysis, and LSHE analysis.");
 
 	public static final CommandLineOption<Boolean> dcVerbose =
 			CommandLine.makeBoolean("dcDebug", false, CommandLineOption.Kind.EXPERIMENTAL, "Perform sanity checks on the analysis.");

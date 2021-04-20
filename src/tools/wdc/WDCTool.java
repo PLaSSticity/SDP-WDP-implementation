@@ -84,6 +84,8 @@ import tools.wdc.event.RdWrDebugNode;
 import tools.wdc.event.RdWrNode;
 import tools.wdc.sourceinfo.SDGI;
 
+import static tools.wdc.event.EventNode.VERBOSE_GRAPH;
+
 @Abbrev("WDC")
 public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, Opcodes {
 
@@ -127,8 +129,6 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 	public static final boolean DC = RR.dcDCOption.get();
 	public static final boolean WCP_DC = RR.dcWCP_DCOption.get();
 	public static final boolean NWC_DC = RR.dcNWC_DCOption.get();
-	public static final boolean uDP = RR.dcuDPOption.get();
-	public static final boolean WCP_uDP = RR.dcWCP_uDPOption.get();
 	public static final boolean WBR = RR.dcWBROption.get();
 	public static final boolean WCP_WBR = RR.dcWCP_WBROption.get();
 	public static final boolean NWC_WBR = RR.dcNWC_WBROption.get();
@@ -136,16 +136,12 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 	public static final boolean WCP_DC_WBR = RR.dcWCP_DC_WBROption.get() || RR.dcDC_WBROption.get();
 	public static final boolean WCP_NWC_DC_WBR = RR.dcWCP_NWC_DC_WBROption.get();
 	public static final boolean WCP_NWC_WBR = RR.dcWCP_NWC_WBROption.get();
-	public static final boolean WCP_DC_uDP_WBR = RR.dcWCP_DC_uDP_WBROption.get();
-	public static final boolean WCP_DC_WBR_LSHE = RR.dcWCP_DC_WBR_LSHEOption.get();
 
-	public static final boolean hasHB = HB || WCP || WCP_DC || WCP_WBR || WCP_uDP || WCP_DC_WBR || WCP_DC_uDP_WBR || WCP_DC_WBR_LSHE || NWC || WCP_NWC || NWC_WBR || NWC_DC || WCP_NWC_DC_WBR || WCP_NWC_WBR;
-	public static final boolean hasWCP = WCP || WCP_DC || WCP_WBR || WCP_DC_WBR || WCP_DC_WBR_LSHE || WCP_uDP || WCP_DC_uDP_WBR || WCP_NWC || WCP_NWC_DC_WBR || WCP_NWC_WBR;
+	public static final boolean hasHB = HB || WCP || WCP_DC || WCP_WBR ||  WCP_DC_WBR || NWC || WCP_NWC || NWC_WBR || NWC_DC || WCP_NWC_DC_WBR || WCP_NWC_WBR;
+	public static final boolean hasWCP = WCP || WCP_DC || WCP_WBR || WCP_DC_WBR ||  WCP_NWC || WCP_NWC_DC_WBR || WCP_NWC_WBR;
 	public static final boolean hasNWC = NWC || WCP_NWC || NWC_WBR || NWC_DC || WCP_NWC_DC_WBR || WCP_NWC_WBR;
-	public static final boolean hasDC = DC || WCP_DC || WCP_DC_WBR || WCP_DC_WBR_LSHE || WCP_DC_uDP_WBR || NWC_DC || WCP_NWC_DC_WBR || DC_WBR;
-	public static final boolean hasUDP = uDP || WCP_uDP || WCP_DC_uDP_WBR;
-	public static final boolean hasWBR = WBR || WCP_WBR || WCP_DC_WBR || WCP_DC_WBR_LSHE || WCP_DC_uDP_WBR || NWC_WBR || WCP_NWC_DC_WBR || DC_WBR || WCP_NWC_WBR;
-	public static final boolean hasLSHE = WCP_DC_WBR_LSHE;
+	public static final boolean hasDC = DC || WCP_DC || WCP_DC_WBR || NWC_DC || WCP_NWC_DC_WBR || DC_WBR;
+	public static final boolean hasWBR = WBR || WCP_WBR || WCP_DC_WBR || NWC_WBR || WCP_NWC_DC_WBR || DC_WBR || WCP_NWC_WBR;
 
 	public static final boolean graphHasBranches = hasWBR;
 	public static final boolean CAPTURE_SHORTEST_RACE = !RR.dontCaptureShortestRace.get();
@@ -202,24 +198,21 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 	private static CV ts_get_wdc(ShadowThread ts) { Assert.panic("Bad");	return null; }
 	private static void ts_set_wdc(ShadowThread ts, CV cv) { Assert.panic("Bad");  }
 
-	private static CV ts_get_udp(ShadowThread ts) { Assert.panic("Bad");	return null; }
-	private static void ts_set_udp(ShadowThread ts, CV cv) { Assert.panic("Bad");  }
-
 	private static CV ts_get_wbr(ShadowThread ts) { Assert.panic("Bad");	return null; }
 	private static void ts_set_wbr(ShadowThread ts, CV cv) { Assert.panic("Bad");  }
 
 	private static Map<ShadowVar,CVE> ts_get_wbr_delayed(ShadowThread ts) { Assert.panic("Bad"); return null; }
 	private static void ts_set_wbr_delayed(ShadowThread ts, Map<ShadowVar,CV> map) { Assert.panic("Bad"); }
 
-	private static Map<ShadowVar, CV> ts_get_nwc_delayed(ShadowThread ts) { Assert.panic("Bad"); return null; }
-	private static void ts_set_nwc_delayed(ShadowThread ts, Map<ShadowVar, CV> map) { Assert.panic("Bad"); }
+	private static Map<ShadowVar, CVE> ts_get_nwc_delayed(ShadowThread ts) { Assert.panic("Bad"); return null; }
+	private static void ts_set_nwc_delayed(ShadowThread ts, Map<ShadowVar, CVE> map) { Assert.panic("Bad"); }
+
+	private static CV ts_get_xdp(ShadowThread ts) { Assert.panic("Bad"); return null; }
+	private static void ts_set_xdp(ShadowThread ts, CV cv) { Assert.panic("Bad"); }
 
 	private static boolean ts_get_hasread(ShadowThread ts) { Assert.panic("Bad"); return true; }
 	private static void ts_set_hasread(ShadowThread ts, boolean reads) { Assert.panic("Bad");  }
 	
-	private static CV ts_get_lshe(ShadowThread ts) { Assert.panic("Bad");	return null; }
-	private static void ts_set_lshe(ShadowThread ts, CV cv) { Assert.panic("Bad"); }
-
 	// We only maintain the "last event" if BUILD_EVENT_GRAPH == true
 	private static EventNode ts_get_lastEventNode(ShadowThread ts) { Assert.panic("Bad"); return null; }
 	private static void ts_set_lastEventNode(ShadowThread ts, EventNode eventNode) { Assert.panic("Bad"); }
@@ -281,6 +274,7 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 					nwc = new CV(INIT_CV_SIZE);
 					ts_set_nwc(currentThread, nwc);
 					ts_set_nwc_delayed(currentThread, new HashMap<>());
+					ts_set_xdp(currentThread, new CV(INIT_CV_SIZE));
 				}
 			}
 			if (hasDC) {
@@ -299,22 +293,6 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 					wbr.inc(currentThread.getTid());
 					ts_set_wbr_delayed(currentThread, new HashMap<>());
 					ts_set_hasread(currentThread, false);
-				}
-			}
-			if (hasLSHE) {
-				CV lshe = ts_get_lshe(currentThread);
-				if (lshe == null) {
-					lshe = new CV(INIT_CV_SIZE);
-					ts_set_lshe(currentThread, lshe);
-					lshe.inc(currentThread.getTid());
-				}
-			}
-			if (hasUDP) {
-				CV udp = ts_get_udp(currentThread);
-				if (udp == null) {
-					udp = new CV(INIT_CV_SIZE);
-					ts_set_udp(currentThread, udp);
-					udp.inc(currentThread.getTid());
 				}
 			}
 			if (CAPTURE_SHORTEST_RACE) ts_set_lamport(currentThread, 0);
@@ -377,8 +355,6 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 					if (hasNWC) ts_get_nwc(main).max(ts_get_nwc(td));
 					if (hasDC) ts_get_wdc(main).max(ts_get_wdc(td));
 					if (hasWBR) ts_get_wbr(main).max(ts_get_wbr(td));
-					if (hasLSHE) ts_get_lshe(main).max(ts_get_lshe(td));
-					if (hasUDP) ts_get_udp(main).max(ts_get_udp(td));
 					}
 				}
 			}
@@ -393,16 +369,16 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 	
 	@Override
 	public void init() {		
-		//Disable event graph generation for HB and WCP and LSHE configurations
-		if (!hasWBR && !hasUDP) {
+		//Disable event graph generation for HB and WCP configurations
+		if (!hasWBR && !hasNWC) {
 			Assert.assertTrue(DISABLE_EVENT_GRAPH == true);
 		}
 
 
-        long nConfigEnabled = Stream.of(HB, WCP, NWC, WCP_NWC, DC, uDP, WBR, WCP_DC, WCP_WBR, NWC_WBR, NWC_DC, DC_WBR, WCP_DC_WBR, WCP_uDP, WCP_DC_uDP_WBR, WCP_NWC_DC_WBR, WCP_NWC_WBR, WCP_DC_WBR_LSHE).filter(b -> b).count();
+        long nConfigEnabled = Stream.of(HB, WCP, NWC, WCP_NWC, DC, WBR, WCP_DC, WCP_WBR, NWC_WBR, NWC_DC, DC_WBR, WCP_DC_WBR, WCP_NWC_DC_WBR, WCP_NWC_WBR).filter(b -> b).count();
         if (nConfigEnabled == 0) {
-		    Util.printf("You must enable a config when running the tool, see options %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s.",
-                    RR.dcHBOption.getId(), RR.dcWCPOption.getId(), RR.dcNWCOption.getId(), RR.dcWCP_NWCOption.getId(), RR.dcNWC_DCOption.getId(), RR.dcDCOption.getId(), RR.dcuDPOption.getId(), RR.dcWCP_uDPOption.getId(), RR.dcWBROption.getId(), RR.dcWCP_DCOption.getId(), RR.dcWCP_WBROption.getId(), RR.dcNWC_WBROption.getId(), RR.dcWCP_DC_WBROption.getId(), RR.dcWCP_NWC_DC_WBROption.getId(), RR.dcWCP_DC_uDP_WBROption.getId(), RR.dcWCP_DC_WBR_LSHEOption.getId());
+		    Util.printf("You must enable a config when running the tool, see options %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s.",
+                    RR.dcHBOption.getId(), RR.dcWCPOption.getId(), RR.dcNWCOption.getId(), RR.dcWCP_NWCOption.getId(), RR.dcNWC_DCOption.getId(), RR.dcDCOption.getId(), RR.dcWBROption.getId(), RR.dcWCP_DCOption.getId(), RR.dcWCP_WBROption.getId(), RR.dcNWC_WBROption.getId(), RR.dcWCP_DC_WBROption.getId(), RR.dcWCP_NWC_DC_WBROption.getId());
 		    Util.exit(1);
         } else if (nConfigEnabled > 1) {
             Util.printf("You can only enable a single config when running the tool!");
@@ -506,7 +482,9 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 		if (dryRun) return;
 
 		// WBR does not draw race edges, it might be missing
-		EventNode.addEdge(startNode, endNode);
+		if (hasWBR) {
+			EventNode.addEdge(startNode, endNode);
+		}
 		boolean failed;
 		try {
 			 failed = EventNode.crazyNewEdges(startNode, endNode, commandDir);
@@ -514,7 +492,7 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 			Util.log("Reordering timed out.");
 			failed = true;
 		}
-		EventNode.removeEdge(startNode, endNode);
+		if (hasWBR)  EventNode.removeEdge(startNode, endNode);
 
 		if (attemptedRaces != null) attemptedRaces.add(nodePair);
 
@@ -550,8 +528,8 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 	private static EventNode getEventNode(ShadowThread td) {
 		if (hasWBR)
 			return ((CVE)ts_get_wbr(td)).eventNode;
-		if (hasUDP)
-			return ((CVE)ts_get_udp(td)).eventNode;
+		if (hasNWC)
+			return ((CVE)ts_get_nwc(td)).eventNode;
 		return null;
 	}
 
@@ -575,7 +553,7 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 			EventNode priorPOEventNode = ts_get_lastEventNode(td);
 			if (priorPOEventNode == null) {
 				// This is the first event of the thread
-				if (VERBOSE) Assert.assertTrue((td.getParent() != null) == (ts_get_wbr(td) instanceof CVE));
+				if (VERBOSE && hasWBR) Assert.assertTrue((td.getParent() != null) == (ts_get_wbr(td) instanceof CVE));
 				if (td.getParent() != null) {
 					EventNode forkEventNode = getEventNode(td);
 					EventNode.addEdge(forkEventNode, thisEventNode);
@@ -613,41 +591,31 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 								wdc.max(mainWDC);
 								mainWDC.inc(mainTid);
 							}
-							if (hasUDP) {
-								final CV mainuDP = ts_get_udp(main);
-								final CV uDP = ts_get_udp(td);
-								uDP.max(mainuDP);
-								mainuDP.inc(mainTid);
-							}
 							if (hasWBR) {
 								final CV mainWBR = ts_get_wbr(main);
 								final CV wbr = ts_get_wbr(td);
 								wbr.max(mainWBR);
 								mainWBR.inc(mainTid);
 							}
-							if (hasLSHE) {
-								final CV mainLSHE = ts_get_lshe(main);
-								final CV lshe = ts_get_lshe(td);
-								lshe.max(mainLSHE);
-								mainLSHE.inc(mainTid);
-							}
 							if (hasWBR)
 								ts_set_wbr(td, new CVE(ts_get_wbr(td), ts_get_lastEventNode(main))); // for generating event node graph
-							else if (hasUDP)
-								ts_set_udp(td, new CVE(ts_get_udp(td), ts_get_lastEventNode(main)));
+							else if (hasNWC) {
+								ts_set_nwc(td, new CVE(ts_get_nwc(td), ts_get_lastEventNode(main)));
+								ts_set_xdp(td, new CVE(ts_get_xdp(td), ts_get_lastEventNode(main)));
+							}
 							
 							Assert.assertTrue(td.getTid() != 0);
 							Assert.assertTrue(ts_get_lastEventNode(main) != null);
 							
 							//Add edge from main to first event in the thread
-							if (VERBOSE) Assert.assertTrue(((CVE)ts_get_wbr(td)).eventNode == ts_get_lastEventNode(main));
+							if (VERBOSE_GRAPH && hasWBR) Assert.assertTrue(((CVE)ts_get_wbr(td)).eventNode == ts_get_lastEventNode(main));
 							
 							EventNode forkEventNode = null;
 							if (hasWBR) forkEventNode = ((CVE)ts_get_wbr(td)).eventNode;
-							else if (hasUDP) forkEventNode = ((CVE)ts_get_udp(td)).eventNode;
+							else if (hasNWC) forkEventNode = ((CVE)ts_get_nwc(td)).eventNode;
 							EventNode.addEdge(forkEventNode, thisEventNode);
 							
-							if (VERBOSE && EventNode.VERBOSE_GRAPH) {
+							if (VERBOSE && VERBOSE_GRAPH) {
 								EventNode eventOne = EventNode.threadToFirstEventMap.get(0);
 								Assert.assertTrue(eventOne.eventNumber == 1);//, "eventOne.eventNumber: " + eventOne.eventNumber);
 								Assert.assertTrue(EventNode.bfsTraversal(eventOne, forkEventNode, null, Long.MIN_VALUE, Long.MAX_VALUE));//, "main T" + main.getTid() + " does not reach event 1. What: " + eventOne.getNodeLabel());
@@ -659,7 +627,7 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 						if (td.getTid() == 0 && thisEventNode.eventNumber < 0) {
 							if (VERBOSE) Assert.assertTrue(thisEventNode.threadID == 0);
 							thisEventNode.eventNumber = 1;
-							if (EventNode.VERBOSE_GRAPH) EventNode.addEventToThreadToItsFirstEventsMap(thisEventNode);
+							if (VERBOSE_GRAPH) EventNode.addEventToThreadToItsFirstEventsMap(thisEventNode);
 						}
 						if (VERBOSE) Assert.assertTrue(thisEventNode.eventNumber == 1 || td.getThread().getName().equals("Finalizer"));//, "Event Number: " + thisEventNode.eventNumber + " | Thread Name: " + td.getThread().getName());
 					}
@@ -670,7 +638,7 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 			ts_set_lastEventNode(td, thisEventNode);
 		} else if (td.getParent() == null && td.getTid() != 0 /*not main thread*/ && !td.getThread().getName().equals("Finalizer")) { //event graph disabled here
 			//If this is the first event in the parentless thread
-			if ((hasHB && ts_get_hb(td).get(0) == 0) || (DC && ts_get_wdc(td).get(0) == 0) || (WBR && ts_get_wbr(td).get(0) == 0) || (uDP && ts_get_udp(td).get(0) == 0)) {
+			if ((hasHB && ts_get_hb(td).get(0) == 0) || (DC && ts_get_wdc(td).get(0) == 0) || (WBR && ts_get_wbr(td).get(0) == 0)) {
 				if (PRINT_EVENT) Util.log("parentless fork to T"+td.getTid());
 				if (COUNT_EVENT) fake_fork.inc(td.getTid());
 				//Get the main thread
@@ -702,23 +670,11 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 						wdc.max(mainWDC);
 						mainWDC.inc(mainTid);
 					}
-					if (hasUDP) {
-						final CV mainuDP = ts_get_udp(main);
-						final CV uDP = ts_get_udp(td);
-						uDP.max(mainuDP);
-						mainuDP.inc(mainTid);
-					}
 					if (hasWBR) {
 						final CV mainWBR = ts_get_wbr(main);
 						final CV wbr = ts_get_wbr(td);
 						wbr.max(mainWBR);
 						mainWBR.inc(mainTid);
-					}
-					if (hasLSHE) {
-						final CV mainLSHE = ts_get_lshe(main);
-						final CV lshe = ts_get_lshe(td);
-						lshe.max(mainLSHE);
-						mainLSHE.inc(mainTid);
 					}
 				}
 			}
@@ -824,12 +780,12 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 				nwc.max(lockData.nwc);
 			}
 
-			final CV nwcUnionPO = new CV(nwc);
+			final CVE nwcUnionPO = new CVE(nwc, thisEventNode);
 			nwcUnionPO.set(tid, hb.get(tid));
 			// acqQueueMap is protected by the lock corresponding to the shadowLock being currently held
 			for (ShadowThread otherTD : ShadowThread.getThreads()) {
 				if (otherTD != td) {
-					ArrayDeque<CV> queue = lockData.nwcAcqQueueMap.get(otherTD);
+					ArrayDeque<CVE> queue = lockData.nwcAcqQueueMap.get(otherTD);
 					if (queue == null) {
 						queue = lockData.nwcAcqQueueGlobal.clone(); // Include any stuff that didn't get added because otherTD hadn't been created yet
 						lockData.nwcAcqQueueMap.put(otherTD, queue);
@@ -840,17 +796,51 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 
 			// Also add to the queue that we'll use for any threads that haven't been created yet.
 			// But before doing that, be sure to initialize *this thread's* queues for the lock using the global queues.
-			ArrayDeque<CV> acqQueue = lockData.nwcAcqQueueMap.get(td);
+			ArrayDeque<CVE> acqQueue = lockData.nwcAcqQueueMap.get(td);
 			if (acqQueue == null) {
 				acqQueue = lockData.nwcAcqQueueGlobal.clone();
 				lockData.nwcAcqQueueMap.put(td, acqQueue);
 			}
-			ArrayDeque<CV> relQueue = lockData.nwcRelQueueMap.get(td);
+			ArrayDeque<CVE> relQueue = lockData.nwcRelQueueMap.get(td);
 			if (relQueue == null) {
 				relQueue = lockData.nwcRelQueueGlobal.clone();
 				lockData.nwcRelQueueMap.put(td, relQueue);
 			}
 			lockData.nwcAcqQueueGlobal.addLast(nwcUnionPO);
+
+			// write--write conflict HB composition
+			final CV xdp = ts_get_xdp(td);
+			xdp.max(lockData.xdp);
+			final CV xdpUnionPO = new CV(xdp);
+			xdpUnionPO.set(tid, hb.get(tid));
+			// maintain reduced XDP and acquire queues for all locks except the one we are currently acquiring
+			for (int i = 0; i < td.getNumLocksHeld(); i++) {
+				ShadowLock m = td.getHeldLock(i);
+				if (m == shadowLock) continue;
+				WDCLockData md = get(m);
+				// reduced XDP
+				md.xdpAcquire.max(lockData.xdp);
+			}
+
+			// queues
+			for (ShadowThread otherTD : ShadowThread.getThreads()) {
+				if (otherTD != td) {
+					ArrayDeque<CV> queue = lockData.xdpAcqQueueMap.get(otherTD);
+					if (queue == null) {
+						queue = lockData.xdpAcqQueueGlobal.clone(); // Include any stuff that didn't get added because otherTD hadn't been created yet
+						lockData.xdpAcqQueueMap.put(otherTD, queue);
+					}
+					queue.addLast(xdpUnionPO);
+				}
+			}
+			ArrayDeque<CV> xdpAcqQueue = lockData.xdpAcqQueueMap.get(td);
+			if (xdpAcqQueue == null) {
+				xdpAcqQueue = lockData.xdpAcqQueueGlobal.clone();
+				lockData.xdpAcqQueueMap.put(td, xdpAcqQueue);
+			}
+			lockData.xdpAcqQueueGlobal.addLast(xdpUnionPO);
+			// save write--write conflict state at acquire
+			lockData.xdpAcquire.max(ts_get_xdp(td));
 		}
 		if (hasDC) {
 			final CV wdc = ts_get_wdc(td);
@@ -885,39 +875,6 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 			}
 			lockData.wdcAcqQueueGlobal.addLast(td, wdcCV);
 		}
-		if (hasUDP) {
-			final CV udp = ts_get_udp(td);
-			if (isHardEdge) {
-				udp.max(lockData.udp);
-			} // Don't max otherwise for udp, since it's not transitive with HB
-
-			CVE udpCVE = new CVE(udp, thisEventNode);
-			// acqQueueMap is protected by the lock corresponding to the shadowLock being currently held
-			for (ShadowThread otherTD : ShadowThread.getThreads()) {
-				if (otherTD != td) {
-					PerThreadQueue<CVE> ptQueue = lockData.udpAcqQueueMap.get(otherTD);
-					if (ptQueue == null) {
-						ptQueue = lockData.udpAcqQueueGlobal.clone();
-						lockData.udpAcqQueueMap.put(otherTD, ptQueue);
-					}
-					ptQueue.addLast(td, udpCVE);
-				}
-			}
-
-			// Also add to the queue that we'll use for any threads that haven't been created yet.
-			// But before doing that, be sure to initialize *this thread's* queues for the lock using the global queues.
-			PerThreadQueue<CVE> acqPTQueue = lockData.udpAcqQueueMap.get(td);
-			if (acqPTQueue == null) {
-				acqPTQueue = lockData.udpAcqQueueGlobal.clone();
-				lockData.udpAcqQueueMap.put(td, acqPTQueue);
-			}
-			PerThreadQueue<CVE> relPTQueue = lockData.udpRelQueueMap.get(td);
-			if (relPTQueue == null) {
-				relPTQueue = lockData.udpRelQueueGlobal.clone();
-				lockData.udpRelQueueMap.put(td, relPTQueue);
-			}
-			lockData.udpAcqQueueGlobal.addLast(td, udpCVE);
-		}
 		if (hasWBR) {
 			final CV wbr = ts_get_wbr(td);
 			if (isHardEdge) {
@@ -950,12 +907,6 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 				lockData.wbrRelQueueMap.put(td, relPTQueue);
 			}
 			lockData.wbrAcqQueueGlobal.addLast(td, wbrCVE);
-		}
-		if (WCP_DC_WBR_LSHE) {
-			final CV lshe = ts_get_lshe(td);
-			if (isHardEdge) {
-				lshe.max(lockData.lshe);
-			}
 		}
 	}
 
@@ -1074,13 +1025,26 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 			final CV nwc = ts_get_nwc(td);
 			final CV nwcUnionPO = new CV(nwc);
 			nwcUnionPO.set(tid, hb.get(tid));
+			final CV lockXDPAcqPO = new CV(lockData.xdpAcquire);
+			lockXDPAcqPO.set(tid, hb.get(tid));
 
 			// Process queue elements
-			ArrayDeque<CV> acqQueue = lockData.nwcAcqQueueMap.get(td);
-			ArrayDeque<CV> relQueue = lockData.nwcRelQueueMap.get(td);
-			while (!acqQueue.isEmpty() && !acqQueue.peekFirst().anyGt(nwcUnionPO)) {
+			ArrayDeque<CVE> acqQueue = lockData.nwcAcqQueueMap.get(td);
+			ArrayDeque<CVE> relQueue = lockData.nwcRelQueueMap.get(td);
+			ArrayDeque<CV> xdpAcqQueue = lockData.xdpAcqQueueMap.get(td);
+
+			while (!acqQueue.isEmpty() && (!acqQueue.peekFirst().anyGt(nwcUnionPO) || !xdpAcqQueue.peekFirst().anyGt(lockXDPAcqPO))) {
 				acqQueue.removeFirst();
-				nwc.max(relQueue.removeFirst());
+				xdpAcqQueue.removeFirst();
+				final CVE prevRel = relQueue.removeFirst();
+
+				if (!DISABLE_EVENT_GRAPH && !hasWBR) {
+					if (prevRel.anyGt(nwc)) {
+						EventNode.addEdge(prevRel.eventNode, thisEventNode);
+					}
+				}
+
+				nwc.max(prevRel);
 			}
 
 			// Rule (a)
@@ -1093,23 +1057,25 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 				cv.max(hb);
 			}
 			for (ShadowVar var : lockData.writeVars) {
-				CV cv = lockData.nwcWriteMap.get(var);
+				CVE cv = lockData.nwcWriteMap.get(var);
 				if (cv == null) {
-					cv = new CV(WDCTool.INIT_CV_SIZE);
+					cv = new CVE(WDCTool.INIT_CV_SIZE, null);
 					lockData.nwcWriteMap.put(var, cv);
 				}
 				cv.max(hb);
+				if (!DISABLE_EVENT_GRAPH) cv.eventNode = thisEventNode;
 			}
 
 			// Assign to lock
 			lockData.hb.assignWithResize(hb);
 			lockData.nwc.assignWithResize(nwc);
+			lockData.xdp.assignWithResize(ts_get_xdp(td));
 
 			// Add to release queues
-			CV hbCopy = new CV(hb);
+			CVE hbCopy = new CVE(hb, thisEventNode);
 			for (ShadowThread otherTD : ShadowThread.getThreads()) {
 				if (otherTD != td) {
-					ArrayDeque<CV> queue = lockData.nwcRelQueueMap.get(otherTD);
+					ArrayDeque<CVE> queue = lockData.nwcRelQueueMap.get(otherTD);
 					if (queue == null) {
 						queue = lockData.nwcRelQueueGlobal.clone(); // Include any stuff that didn't get added because otherTD hadn't been created yet
 						lockData.nwcRelQueueMap.put(otherTD, queue);
@@ -1181,59 +1147,6 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 			// Clear read/write maps
 			lockData.wdcReadMap = getPotentiallyShrunkMap(lockData.wdcReadMap);
 			lockData.wdcWriteMap = getPotentiallyShrunkMap(lockData.wdcWriteMap);
-		}
-
-		if (hasUDP) {
-			final CV udp = ts_get_udp(td);
-
-			// Process queue elements
-			PerThreadQueue<CVE> acqPTQueue = lockData.udpAcqQueueMap.get(td);
-			if (VERBOSE) Assert.assertTrue(acqPTQueue.isEmpty(td));
-			PerThreadQueue<CVE> relPTQueue = lockData.udpRelQueueMap.get(td);
-			for (ShadowThread otherTD : ShadowThread.getThreads()) {
-				if (otherTD != td) {
-					while (!acqPTQueue.isEmpty(otherTD) && !acqPTQueue.peekFirst(otherTD).anyGt(udp)) {
-						acqPTQueue.removeFirst(otherTD);
-						CVE prevRel = relPTQueue.removeFirst(otherTD);
-
-						if (!DISABLE_EVENT_GRAPH && (uDP || WCP_uDP)) {
-							// If local VC is up-to-date w.r.t. prevRel, then no need to add a new edge
-							// Protected by the fact that the lock is currently held
-							if (prevRel.anyGt(udp)) {
-								EventNode.addEdge(prevRel.eventNode, thisEventNode);
-							}
-						}
-
-						udp.max(prevRel);
-					}
-				}
-			}
-
-			// Rule (a)
-			for (ShadowVar var : lockData.writeVars) {
-				lockData.udpWriteMap.put(var, new CVE(udp, thisEventNode));
-			}
-
-			// Assign to lock
-			lockData.udp.assignWithResize(udp); // Used for hard notify -> wait edge
-
-			// Add to release queues
-			CVE udpCVE = new CVE(udp, thisEventNode);
-			for (ShadowThread otherTD : ShadowThread.getThreads()) {
-				if (otherTD != td) {
-					PerThreadQueue<CVE> queue = lockData.udpRelQueueMap.get(otherTD);
-					if (queue == null) {
-						queue = lockData.udpRelQueueGlobal.clone(); // Include any stuff that didn't get added because otherTD hadn't been created yet
-						lockData.udpRelQueueMap.put(otherTD, queue);
-					}
-					queue.addLast(td, udpCVE);
-				}
-			}
-			// Also add to the queue that we'll use for any threads that haven't been created yet
-			lockData.udpRelQueueGlobal.addLast(td, udpCVE);
-
-			// Clear write map
-			lockData.udpWriteMap = getPotentiallyShrunkMap(lockData.udpWriteMap);
 		}
 		
 		if (hasWBR) {
@@ -1307,13 +1220,7 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 		if (hasWBR) {
 			ts_get_wbr(td).inc(tid);
 		}
-		if (hasUDP) {
-			ts_get_udp(td).inc(tid);
-		}
-		if (hasLSHE) {
-			if (isHardEdge) ts_get_lshe(td).inc(tid);
-		}
-		
+
 		//Set latest Release node for lockData
 		lockData.latestRelNode = thisEventNode;
 
@@ -1330,8 +1237,6 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 			ts_set_eTd(td, ts_get_wdc(td).get(td.getTid()));
 		} else if (WBR) {
 			ts_set_eTd(td, ts_get_wbr(td).get(td.getTid()));
-		} else if (uDP) {
-			ts_set_eTd(td, ts_get_udp(td).get(td.getTid()));
 		}
 	}
 
@@ -1349,12 +1254,6 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 		synchronized(td) {
 			if (hasHB) {
 				if (x.hbRead.get(td.getTid()) >= ts_get_eTd(td)) {
-					if (COUNT_EVENT) readFP.inc(td.getTid());
-					return true;
-				}
-			}
-			if (uDP) {
-				if (x.udpRead.get(td.getTid()) >= ts_get_eTd(td)) {
 					if (COUNT_EVENT) readFP.inc(td.getTid());
 					return true;
 				}
@@ -1381,12 +1280,6 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 		synchronized(td) {
 			if (hasHB) {
 				if (x.hbWrite.get(td.getTid()) >= ts_get_eTd(td)) {
-					if (COUNT_EVENT) writeFP.inc(td.getTid());
-					return true;
-				}
-			}
-			if (uDP) {
-				if (x.udpWrite.get(td.getTid()) >= ts_get_eTd(td)) {
 					if (COUNT_EVENT) writeFP.inc(td.getTid());
 					return true;
 				}
@@ -1507,36 +1400,25 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 						if (hasDC) {
 							ts_get_wdc(td).max(initTime.wdcWrite);
 						}
-						if (hasUDP) {
-							ts_get_udp(td).max(initTime.udp);
-						}
 						if (hasWBR) {
 							ts_get_wbr(td).max(initTime.wbr);
-						}
-						if (hasLSHE) {
-							ts_get_lshe(td).max(initTime.lshe);
 						}
 						if (!DISABLE_EVENT_GRAPH) {
 							if (hasWBR) {
 								if (initTime.wbr.anyGt(ts_get_wbr(td))) {
 									EventNode.addEdge(initTime.wbr.eventNode, thisEventNode);
 								}
-							} else if (hasUDP) {
-								if (initTime.udp.anyGt(ts_get_udp(td))) {
-									EventNode.addEdge(initTime.udp.eventNode, thisEventNode);
+							} else if (hasNWC) {
+								if (initTime.hbWrite.anyGt(ts_get_nwc(td))) {
+									EventNode.addEdge(initTime.nwcWrite.eventNode, thisEventNode);
 								}
 							}
 						}
 					}
 				}
 
-				if (hasNWC && fae.isRead()) {
-					// Apply any delayed wr-wr conflict edges
-					CV delayed = ts_get_nwc_delayed(td).remove(x);
-					if (delayed != null) ts_get_nwc(td).max(delayed);
-				}
 				CV nwcSameLockWrites = null; // Only maintained if hasNWC && fae.isWrite()
-				if (hasNWC && !hasWBR && fae.isWrite()) { // Skip if WBR is enabled because we already have locksets for WBR
+				if (hasNWC && fae.isWrite()) { // Skip if WBR is enabled because we already have locksets for WBR
 					nwcSameLockWrites = new CV(INIT_CV_SIZE);
 				}
 
@@ -1561,7 +1443,7 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 					}
 					if (hasNWC) {
 						final CV nwc = ts_get_nwc(td);
-						final CV priorCriticalSectionAfterWrite = lockData.nwcWriteMap.get(x);
+						final CVE priorCriticalSectionAfterWrite = lockData.nwcWriteMap.get(x);
 						if (fae.isRead()) { // No direct write-write conflict edges
 							if (priorCriticalSectionAfterWrite != null) {
 								nwc.max(priorCriticalSectionAfterWrite);
@@ -1574,9 +1456,17 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 							}
 							if (priorCriticalSectionAfterWrite != null) {
 								// wr-wr edge, delayed until the next read
-								ts_get_nwc_delayed(td)
-										.computeIfAbsent(x, var -> new CV(INIT_CV_SIZE))
-										.max(priorCriticalSectionAfterWrite);
+								final CVE nwcDelayed = ts_get_nwc_delayed(td).computeIfAbsent(x, var -> new CVE(INIT_CV_SIZE, null));
+								nwcDelayed.max(priorCriticalSectionAfterWrite);
+								ts_get_xdp(td).max(nwcDelayed);
+								// Update reduced XDP for other locks
+								for (int j = td.getNumLocksHeld() - 1; j >= 0; j--) {
+									if (i == j) continue;
+									ShadowLock jLock = td.getHeldLock(j);
+									WDCLockData jLockData = get(jLock);
+									jLockData.xdpAcquire.max(nwcDelayed);
+								}
+								if (!DISABLE_EVENT_GRAPH && !hasWBR) nwcDelayed.setEventNode(priorCriticalSectionAfterWrite.eventNode);
 								if (!hasWBR) nwcSameLockWrites.max(priorCriticalSectionAfterWrite);
 							}
 						}
@@ -1652,16 +1542,17 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 					if (NWC) {
 						final CV hb = ts_get_hb(td);
 						final CV nwc = ts_get_nwc(td);
-						boolean foundRace = checkForRacesNWC(fae.isWrite(), x, fae, td, hb, nwc, nwcSameLockWrites);
+						boolean foundRace = checkForRacesNWC(fae.isWrite(), x, fae, td, hb, nwc, nwcSameLockWrites, thisEventNode);
 						// Update thread VCs if race detected (to correspond with edge being added)
 						if (foundRace) {
 							hb.max(x.hbWrite);
 							if (fae.isWrite()) {
 								hb.max(x.hbReadsJoined);
 								nwc.max(x.hbReadsJoined);
-								ts_get_nwc_delayed(td)
-										.computeIfAbsent(x, var -> new CV(INIT_CV_SIZE))
-										.max(x.hbWrite);
+								final CVE nwcDelayed = ts_get_nwc_delayed(td).computeIfAbsent(x, var -> new CVE(INIT_CV_SIZE, null));
+								nwcDelayed.max(x.hbWrite);
+								ts_get_xdp(td).max(nwcDelayed);
+								if (!DISABLE_EVENT_GRAPH && !hasWBR) nwcDelayed.setEventNode(x.hbWrite.eventNode);
 							} else { // isRead
 								nwc.max(x.hbWrite);
 							}
@@ -1669,7 +1560,6 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 							Assert.assertTrue(!x.hbWrite.anyGt(hb));
 							if (fae.isWrite()) {
 								Assert.assertTrue(!x.hbReadsJoined.anyGt(hb));
-								ts_get_nwc_delayed(td).put(x, new CV(x.hbWrite));
 							} else { // isRead
 								Assert.assertTrue(!x.hbWrite.anyGt(hb));
 								final CV nwcUnionPO = new CV(nwc);
@@ -1682,7 +1572,7 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 						final CV hb = ts_get_hb(td);
 						final CV wcp = ts_get_wcp(td);
 						final CV nwc = ts_get_nwc(td);
-						boolean foundRace = checkForRacesNWC(fae.isWrite(), x, fae, td, hb, wcp, nwc, nwcSameLockWrites);
+						boolean foundRace = checkForRacesNWC(fae.isWrite(), x, fae, td, hb, wcp, nwc, nwcSameLockWrites, thisEventNode);  // Write-write conflict race edge added inside race check
 						// Update thread VCs if race detected (to correspond with edge being added)
 						if (foundRace) {
 							hb.max(x.hbWrite);
@@ -1691,9 +1581,6 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 								hb.max(x.hbReadsJoined);
 								wcp.max(x.hbReadsJoined);
 								nwc.max(x.hbReadsJoined);
-								ts_get_nwc_delayed(td)
-										.computeIfAbsent(x, var -> new CV(INIT_CV_SIZE))
-										.max(x.hbWrite);
 							} else { // isRead
 								nwc.max(x.hbWrite);
 							}
@@ -1730,27 +1617,6 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 								if (VERBOSE) Assert.assertTrue(!x.wdcReadsJoined.anyGt(wdc));
 							}
 						}
-					}
-					if (uDP) {
-						final CV udp = ts_get_udp(td);
-
-						// Rule a, wr-rd edge from the last writer of the read
-						if (fae.isRead()) {
-							ts_set_hasread(td, true); // Mark that we have seen a read, next branch can't be a fast path
-							if (x.hasLastWriter() && x.lastWriteTid != td.getTid()) {
-								ShadowLock shadowLock = findCommonLock(x.heldLocksWrite.get(x.lastWriteTid), td.getLocksHeld());
-								if (shadowLock != null) { // Common lock exists, prepare for the edge
-									WDCLockData lock = get(shadowLock);
-									CVE writes = lock.wbrWriteMap.get(x);
-									if (!DISABLE_EVENT_GRAPH && writes.anyGt(udp))
-										EventNode.addEdge(writes.eventNode, thisEventNode);
-									udp.max(writes);
-								}
-							}
-						}
-
-						checkForRacesuDP(fae.isWrite(), x, fae, td, udp, thisEventNode);
-						// uDP race edges are drawn in checkForRacesuDP
 					}
 					if (WBR) {
 						final CV wbr = ts_get_wbr(td);
@@ -1795,7 +1661,7 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 							}
 						}
 
-						boolean foundRace = checkForRacesNWC_WBR(fae.isWrite(), x, fae, td, hb, nwc, wbr, thisEventNode);
+						boolean foundRace = checkForRacesNWC_WBR(fae.isWrite(), x, fae, td, hb, nwc, nwcSameLockWrites, wbr, thisEventNode);
 						// WBR race edges are drawn in checkForRacesWBR
 
 						if (foundRace) {
@@ -1803,9 +1669,10 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 							if (fae.isWrite()) {
 								hb.max(x.hbReadsJoined);
 								nwc.max(x.hbReadsJoined);
-								ts_get_nwc_delayed(td)
-										.computeIfAbsent(x, var -> new CV(INIT_CV_SIZE))
-										.max(x.hbWrite);
+								final CVE nwcDelayed = ts_get_nwc_delayed(td).computeIfAbsent(x, var -> new CVE(INIT_CV_SIZE, null));
+								nwcDelayed.max(x.hbWrite);
+								ts_get_xdp(td).max(nwcDelayed);
+								if (!DISABLE_EVENT_GRAPH && !hasWBR) nwcDelayed.setEventNode(x.hbWrite.eventNode);
 							} else { // isRead
 								nwc.max(x.hbWrite);
 							}
@@ -1834,9 +1701,10 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 								hb.max(x.hbReadsJoined);
 								wdc.max(x.wdcReadsJoined);
 								nwc.max(x.hbReadsJoined);
-								ts_get_nwc_delayed(td)
-										.computeIfAbsent(x, var -> new CV(INIT_CV_SIZE))
-										.max(x.hbWrite);
+								final CVE nwcDelayed = ts_get_nwc_delayed(td).computeIfAbsent(x, var -> new CVE(INIT_CV_SIZE, null));
+								nwcDelayed.max(x.hbWrite);
+								ts_get_xdp(td).max(nwcDelayed);
+								if (!DISABLE_EVENT_GRAPH && !hasWBR) nwcDelayed.setEventNode(x.hbWrite.eventNode);
 							} else {
 								nwc.max(x.hbWrite);
 							}
@@ -1917,45 +1785,6 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 								if (VERBOSE) Assert.assertTrue(!x.hbReadsJoined.anyGt(hb));
 								if (VERBOSE) Assert.assertTrue(!x.wcpReadsJoined.anyGt(wcpUnionPO));
 //								if (VERBOSE) Assert.assertTrue(!x.wbrReadsJoined.anyGt(wbr)); // Doesn't hold for WBR due to locksets
-							}
-						}
-					}
-					if (WCP_uDP) {
-						final CV hb = ts_get_hb(td);
-						final CV wcp = ts_get_wcp(td);
-						final CV udp = ts_get_udp(td);
-
-						// WBR Rule a, wr-rd edge from the last writer of the read
-						if (fae.isRead()) {
-							if (x.hasLastWriter() && x.lastWriteTid != td.getTid()) {
-								ShadowLock shadowLock = findCommonLock(x.heldLocksWrite.get(x.lastWriteTid), td.getLocksHeld());
-								if (shadowLock != null) { // Common lock exists, prepare for the edge
-									WDCLockData lock = get(shadowLock);
-									CVE writes = lock.wbrWriteMap.get(x);
-									if (!DISABLE_EVENT_GRAPH && writes.anyGt(udp))
-										EventNode.addEdge(writes.eventNode, thisEventNode);
-									udp.max(writes);
-								}
-							}
-						}
-
-						boolean foundRace = checkForRacesuDP(fae.isWrite(), x, fae, td, hb, wcp, udp, thisEventNode);
-						// Update thread VCs if race detected (to correspond with edge being added)
-						if (foundRace) {
-							hb.max(x.hbWrite);
-							wcp.max(x.hbWrite);
-							if (fae.isWrite()) {
-								hb.max(x.hbReadsJoined);
-								wcp.max(x.hbReadsJoined);
-							}
-						} else if (VERBOSE) { // Check that we don't need to update CVs if there was no race)
-							Assert.assertTrue(!x.hbWrite.anyGt(hb));
-							final CV wcpUnionPO = new CV(wcp);
-							wcpUnionPO.set(tid, hb.get(tid));
-							Assert.assertTrue(!x.wcpWrite.anyGt(wcpUnionPO));
-							if (fae.isWrite()) {
-								Assert.assertTrue(!x.hbReadsJoined.anyGt(hb));
-								Assert.assertTrue(!x.wcpReadsJoined.anyGt(wcpUnionPO));
 							}
 						}
 					}
@@ -2068,7 +1897,7 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 							}
 						}
 
-						boolean foundRace = checkForRacesWBRNWC(fae.isWrite(), x, fae, td, hb, wcp, nwc, wdc, wbr, thisEventNode);
+						boolean foundRace = checkForRacesWBRNWC(fae.isWrite(), x, fae, td, hb, wcp, nwc, nwcSameLockWrites, wdc, wbr, thisEventNode);
 						// Update thread VCs if race detected (to correspond with edge being added)
 						if (foundRace) {
 							// Prior relations order all conflicting accesses, WBR race edges are drawn in checkForRacesWBR
@@ -2080,9 +1909,10 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 								wcp.max(x.hbReadsJoined);
 								wdc.max(x.wdcReadsJoined);
 								nwc.max(x.hbReadsJoined);
-								ts_get_nwc_delayed(td)
-										.computeIfAbsent(x, var -> new CV(INIT_CV_SIZE))
-										.max(x.hbWrite);
+								final CVE nwcDelayed = ts_get_nwc_delayed(td).computeIfAbsent(x, var -> new CVE(INIT_CV_SIZE, null));
+								nwcDelayed.max(x.hbWrite);
+								ts_get_xdp(td).max(nwcDelayed);
+								if (!DISABLE_EVENT_GRAPH && !hasWBR) nwcDelayed.setEventNode(x.hbWrite.eventNode);
 							} else {
 								nwc.max(x.hbWrite);
 							}
@@ -2118,7 +1948,7 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 							}
 						}
 
-						boolean foundRace = checkForRacesWBRNWC(fae.isWrite(), x, fae, td, hb, wcp, nwc, wbr, thisEventNode);
+						boolean foundRace = checkForRacesWBRNWC(fae.isWrite(), x, fae, td, hb, wcp, nwc, nwcSameLockWrites, wbr, thisEventNode);
 						// Update thread VCs if race detected (to correspond with edge being added)
 						if (foundRace) {
 							// Prior relations order all conflicting accesses, WBR race edges are drawn in checkForRacesWBR
@@ -2128,122 +1958,17 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 								hb.max(x.hbReadsJoined);
 								wcp.max(x.hbReadsJoined);
 								nwc.max(x.hbReadsJoined);
-								ts_get_nwc_delayed(td)
-										.computeIfAbsent(x, var -> new CV(INIT_CV_SIZE))
-										.max(x.hbWrite);
-							}// else {
+								final CVE nwcDelayed = ts_get_nwc_delayed(td).computeIfAbsent(x, var -> new CVE(INIT_CV_SIZE, null));
+								nwcDelayed.max(x.hbWrite);
+								ts_get_xdp(td).max(nwcDelayed);
+								if (!DISABLE_EVENT_GRAPH && !hasWBR) nwcDelayed.setEventNode(x.hbWrite.eventNode);
+							} else {
 								nwc.max(x.hbWrite);
-							//}
-						} else { // Check that we don't need to update CVs if there was no race)
-							if (VERBOSE) Assert.assertTrue(!x.hbWrite.anyGt(hb));
-							if (fae.isWrite()) {
-								if (VERBOSE) Assert.assertTrue(!x.hbReadsJoined.anyGt(hb));
-							}
-						}
-					}
-
-					if (WCP_DC_uDP_WBR) {
-						final CV hb = ts_get_hb(td);
-						final CV wcp = ts_get_wcp(td);
-						final CV wdc = ts_get_wdc(td);
-						final CV udp = ts_get_udp(td);
-						final CV wbr = ts_get_wbr(td);
-
-						// WBR Rule a, wr-rd edge from the last writer of the read
-						if (fae.isRead()) {
-							ts_set_hasread(td, true); // Mark that we have seen a read, next branch can't be a fast path
-							if (x.hasLastWriter() && x.lastWriteTid != td.getTid()) {
-								ShadowLock shadowLock = findCommonLock(x.heldLocksWrite.get(x.lastWriteTid), td.getLocksHeld());
-								if (shadowLock != null) { // Common lock exists, prepare for the edge
-									WDCLockData lock = get(shadowLock);
-									CVE wbrWrites = lock.wbrWriteMap.get(x);
-									if (wbrWrites.anyGt(wbr)) { // Only prepare for the edge if it is not redundant
-										if (!NO_SDG) wbrWrites = new CVED(wbrWrites, thisEventNode, fae.getAccessInfo().getLoc().getSourceLoc());
-										ts_get_wbr_delayed(td).put(x, wbrWrites);
-
-										CV uDPWrites = lock.udpWriteMap.get(x);
-										if (uDPWrites.anyGt(udp)) {
-											udp.max(uDPWrites);
-										}
-									}
-								}
-							}
-						}
-
-						boolean foundRace = checkForRacesWBR(fae.isWrite(), x, fae, td, hb, wcp, wdc, udp, wbr, thisEventNode);
-						// Update thread VCs if race detected (to correspond with edge being added)
-						if (foundRace) {
-							// Prior relations order all conflicting accesses, WBR race edges are drawn in checkForRacesWBR
-							hb.max(x.hbWrite);
-							wcp.max(x.hbWrite);
-							wdc.max(x.wdcWrite);
-							if (fae.isWrite()) {
-								hb.max(x.hbReadsJoined);
-								wcp.max(x.hbReadsJoined);
-								wdc.max(x.wdcReadsJoined);
 							}
 						} else if (VERBOSE) { // Check that we don't need to update CVs if there was no race)
 							Assert.assertTrue(!x.hbWrite.anyGt(hb));
-							final CV wcpUnionPO = new CV(wcp);
-							wcpUnionPO.set(tid, hb.get(tid));
-							Assert.assertTrue(!x.wcpWrite.anyGt(wcpUnionPO));
-							Assert.assertTrue(!x.wdcWrite.anyGt(wdc));
 							if (fae.isWrite()) {
 								Assert.assertTrue(!x.hbReadsJoined.anyGt(hb));
-								Assert.assertTrue(!x.wcpReadsJoined.anyGt(wcpUnionPO));
-								Assert.assertTrue(!x.wdcReadsJoined.anyGt(wdc));
-							}
-						}
-					}
-					if (WCP_DC_WBR_LSHE) {
-						final CV hb = ts_get_hb(td);
-						final CV wcp = ts_get_wcp(td);
-						final CV wdc = ts_get_wdc(td);
-						final CV wbr = ts_get_wbr(td);
-						final CV lshe = ts_get_lshe(td);
-
-						// WBR Rule a, wr-rd edge from the last writer of the read
-						if (fae.isRead()) {
-							ts_set_hasread(td, true); // Mark that we have seen a read, next branch can't be a fast path
-							if (x.hasLastWriter() && x.lastWriteTid != td.getTid()) {
-								ShadowLock shadowLock = findCommonLock(x.heldLocksWrite.get(x.lastWriteTid), td.getLocksHeld());
-								if (shadowLock != null) { // Common lock exists, prepare for the edge
-									WDCLockData lock = get(shadowLock);
-									CVE writes = lock.wbrWriteMap.get(x);
-									if (writes.anyGt(wbr)) { // Only prepare for the edge if it is not redundant
-										if (!NO_SDG) writes = new CVED(writes, thisEventNode, fae.getAccessInfo().getLoc().getSourceLoc());
-										ts_get_wbr_delayed(td).put(x, writes);
-									}
-								}
-							}
-						}
-
-						boolean foundRace = checkForRacesLSHE(fae.isWrite(), x, fae, td, hb, wcp, wdc, wbr, lshe, thisEventNode);
-						// Update thread VCs if race detected (to correspond with edge being added)
-						if (foundRace) {
-							// Prior relations order all conflicting accesses, WBR race edges are drawn in checkForRacesWBR
-							hb.max(x.hbWrite);
-							wcp.max(x.hbWrite);
-							wdc.max(x.wdcWrite);
-							if (fae.isWrite()) {
-								hb.max(x.hbReadsJoined);
-								wcp.max(x.hbReadsJoined);
-								wdc.max(x.wdcReadsJoined);
-							}
-						} else { // Check that we don't need to update CVs if there was no race)
-							if (VERBOSE) Assert.assertTrue(!x.hbWrite.anyGt(hb));
-							final CV wcpUnionPO = new CV(wcp);
-							wcpUnionPO.set(tid, hb.get(tid));
-							if (VERBOSE) Assert.assertTrue(!x.wcpWrite.anyGt(wcpUnionPO));
-							if (VERBOSE) Assert.assertTrue(!x.wdcWrite.anyGt(wdc));
-//							if (VERBOSE) Assert.assertTrue(!x.wbrWrite.anyGt(wbr)); // Doesn't hold for WBR due to locksets
-							// Doesn't hold for LSHE due to locksets?
-							if (fae.isWrite()) {
-								if (VERBOSE) Assert.assertTrue(!x.hbReadsJoined.anyGt(hb));
-								if (VERBOSE) Assert.assertTrue(!x.wcpReadsJoined.anyGt(wcpUnionPO));
-								if (VERBOSE) Assert.assertTrue(!x.wdcReadsJoined.anyGt(wdc));
-//								if (VERBOSE) Assert.assertTrue(!x.wbrReadsJoined.anyGt(wbr)); // Doesn't hold for WBR due to locksets
-								// Doesn't hold for LSHE due to locksets?
 							}
 						}
 					}
@@ -2253,6 +1978,7 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 						final CV hb = ts_get_hb(td);
 						if (fae.isWrite()) {
 							x.hbWrite.assignWithResize(hb);
+							if (!DISABLE_EVENT_GRAPH && hasNWC && !hasWBR) x.hbWrite.eventNode = thisEventNode;
 						} else {
 							x.hbRead.set(tid, hb.get(tid));
 							x.hbReadsJoined.max(hb);
@@ -2277,9 +2003,19 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 						final CV nwcUnionPO = new CV(nwc);
 						nwcUnionPO.set(tid, hb.get(tid));
 
+						if (fae.isRead()) {
+							// Apply any delayed wr-wr conflict edges
+							CVE delayed = ts_get_nwc_delayed(td).remove(x);
+							if (delayed != null) {
+								nwc.max(delayed);
+								if (!DISABLE_EVENT_GRAPH && !hasWBR) EventNode.addEdge(delayed.eventNode, thisEventNode);
+							}
+						}
+
 						if (fae.isWrite()) {
 							x.nwcWrite.set(tid, nwcUnionPO.get(tid));
 							x.nwcWritesJoined.max(nwcUnionPO);
+							if (hasWCP && VERBOSE) Assert.assertFalse(x.nwcWrite.anyGt(x.wcpWrite));
 						} else {
 							x.nwcRead.set(tid, hb.get(tid));
 							x.nwcReadsJoined.max(nwcUnionPO);
@@ -2294,15 +2030,6 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 							x.wdcReadsJoined.max(wdc);
 						}
 					}
-					if (hasUDP) {
-						final CV udp = ts_get_udp(td);
-						if (fae.isWrite()) {
-							x.udpWrite.set(tid, udp.get(tid));
-						} else {
-							x.udpRead.set(tid, udp.get(tid));
-							x.udpReadsJoined.max(udp);
-						}
-					}
 					if (hasWBR) {
 						final CV wbr = ts_get_wbr(td);
 						if (fae.isWrite()) {
@@ -2314,29 +2041,20 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 							x.wbrReadsJoined.max(wbr);
 						}
 					}
-					if (hasWBR || hasUDP) {
+					if (hasWBR) {
 						if (fae.isWrite()) {
 							x.heldLocksWrite.put(td.getTid(), td.getLocksHeld());
 						} else {
 							x.heldLocksRead.put(td.getTid(), td.getLocksHeld());
-							if (!DISABLE_EVENT_GRAPH) {
-								if (x.hasLastWriter()) {
-									RdWrNode lastWriter = x.lastWriteEvents[x.lastWriteTid].eventNode;
-									thisEventNode.setLastWriter(lastWriter);
-									thisEventNode.eventNumber = Math.max(thisEventNode.eventNumber, lastWriter.eventNumber + 1);
-								} else {
-									thisEventNode.setHasNoLastWriter();
-								}
-							}
 						}
 					}
-					if (hasLSHE) {
-						final CV lshe = ts_get_lshe(td);
-						if (fae.isWrite()) {
-							x.lsheWrite.assignWithResize(lshe);
+					if ((hasNWC || hasWBR ) && fae.isRead() && !DISABLE_EVENT_GRAPH) {
+						if (x.hasLastWriter()) {
+							RdWrNode lastWriter = x.lastWriteEvents[x.lastWriteTid].eventNode;
+							thisEventNode.setLastWriter(lastWriter);
+							thisEventNode.eventNumber = Math.max(thisEventNode.eventNumber, lastWriter.eventNumber + 1);
 						} else {
-							x.lsheRead.set(tid, lshe.get(tid));
-							x.lsheReadsJoined.max(lshe);
+							thisEventNode.setHasNoLastWriter();
 						}
 					}
 					
@@ -2369,14 +2087,8 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 					if (hasDC) {
 						ts_get_wdc(td).inc(tid);
 					}
-					if (hasUDP) {
-						ts_get_udp(td).inc(tid);
-					}
 					if (hasWBR) {
 						ts_get_wbr(td).inc(tid);
-					}
-					if (hasLSHE) {
-						ts_get_lshe(td).inc(tid);
 					}
 				}
 				
@@ -2494,7 +2206,7 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 		return recordRace(x, ae, tid, shortestRaceTid, shortestRaceIsWrite, shortestRaceType, null);
 	}
 
-	boolean checkForRacesNWC(boolean isWrite, WDCGuardState x, AccessEvent ae, ShadowThread td, CV hb, CV nwc, CV nwcSameLockWrites) {
+	boolean checkForRacesNWC(boolean isWrite, WDCGuardState x, AccessEvent ae, ShadowThread td, CV hb, CV nwc, CV nwcSameLockWrites, RdWrNode thisEventNode) {
 		final int tid = td.getTid();
 		final CV nwcUnionPO = new CV(nwc);
 		nwcUnionPO.set(tid, hb.get(tid));
@@ -2515,10 +2227,21 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 				if (x.hbWrite.get(index) > hb.get(index)) {
 					type = RaceType.HBRace;
 				}
-				// Update the latest race with the current race since we only want to report one race per access event
-				shortestRaceTid = index;
-				shortestRaceIsWrite = true;
-				shortestRaceType = type;
+				int shortestRaceLamport = shortestRaceTid >= 0 ? x.lastWriteLamport[shortestRaceTid] : -1;
+				if (!CAPTURE_SHORTEST_RACE || shortestRaceLamport == -1 || x.lastWriteLamport[index] > shortestRaceLamport) {
+					shortestRaceTid = index;
+					shortestRaceIsWrite = true;
+					shortestRaceType = type;
+				}
+				if (!DISABLE_EVENT_GRAPH) {
+					// Keep event numbers of racing events in observed order even if we don't draw an edge, to avoid accidentally reordering them when they are outside the race window
+					thisEventNode.eventNumber = Math.max(thisEventNode.eventNumber, x.lastWriteEvents[index].eventNode.eventNumber + 1);
+					// Draw race edge
+					final CVE nwcDelayed = ts_get_nwc_delayed(td).computeIfAbsent(x, var -> new CVE(INIT_CV_SIZE, null));
+					nwcDelayed.max(x.hbWrite);
+					ts_get_xdp(td).max(nwcDelayed);
+					nwcDelayed.setEventNode(x.hbWrite.eventNode);
+				}
 			}
 		} else {
 			if (VERBOSE) Assert.assertTrue(!x.hbWrite.anyGt(hb));
@@ -2532,19 +2255,29 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 					if (x.hbRead.get(index) > hb.get(index)) {
 						type = RaceType.HBRace;
 					}
-					// Update the latest race with the current race since we only want to report one race per access event
-					shortestRaceTid = index;
-					shortestRaceIsWrite = false;
-					shortestRaceType = type;
+					// Keep event numbers of racing evenst in observed order even if we don't draw an edge, to avoid accidentally reordering them when they are outside the race window
+					if (!DISABLE_EVENT_GRAPH) thisEventNode.eventNumber = Math.max(thisEventNode.eventNumber, x.lastReadEvents[index].eventNode.eventNumber + 1);
+					//Update the latest race with the current race since we only want to report one race per access event
+					int shortestRaceLamport = shortestRaceTid >= 0 ? (shortestRaceIsWrite ? x.lastWriteLamport[shortestRaceTid] : x.lastReadLamport[shortestRaceTid]) : -1;
+					if (!CAPTURE_SHORTEST_RACE || shortestRaceLamport == -1 || x.lastWriteLamport[index] > shortestRaceLamport) {
+						shortestRaceTid = index;
+						shortestRaceIsWrite = false;
+						shortestRaceType = type;
+					}
+					if (VERBOSE) Assert.assertTrue(x.lastReadEvents[index] != null);
+					if (!DISABLE_EVENT_GRAPH && VERBOSE) Assert.assertTrue(x.lastReadEvents[index].eventNode != null);
+					if (!DISABLE_EVENT_GRAPH) {
+						EventNode.addEdge(x.lastReadEvents[index].eventNode, thisEventNode);
+					}
 				}
 			} else {
 				if (VERBOSE) Assert.assertTrue(!x.hbRead.anyGt(hb));
 			}
 		}
-		return recordRace(x, ae, tid, shortestRaceTid, shortestRaceIsWrite, shortestRaceType, null);
+		return recordRace(x, ae, tid, shortestRaceTid, shortestRaceIsWrite, shortestRaceType, thisEventNode);
 	}
 
-	boolean checkForRacesNWC(boolean isWrite, WDCGuardState x, AccessEvent ae, ShadowThread td, CV hb, CV wcp, CV nwc, CV nwcSameLockWrites) {
+	boolean checkForRacesNWC(boolean isWrite, WDCGuardState x, AccessEvent ae, ShadowThread td, CV hb, CV wcp, CV nwc, CV nwcSameLockWrites, RdWrNode thisEventNode) {
 		final int tid = td.getTid();
 		final CV nwcUnionPO = new CV(nwc);
 		nwcUnionPO.set(tid, hb.get(tid));
@@ -2565,17 +2298,28 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 			int index = -1;
 			while ((index = x.nwcWrite.nextGt(isWrite ? nwcPOWr : nwcUnionPO, index + 1)) != -1) {
 				RaceType type = RaceType.NWCRace;
-				if (x.wcpWrite.get(index) > wcpUnionPO.get(index)) {
+				if (x.wcpWrite.anyGt(wcpUnionPO)) {
 					type = RaceType.WCPRace;
-					if (x.hbWrite.get(index) > hb.get(index)) {
+					if (x.hbWrite.anyGt(hb)) {
 						type = RaceType.HBRace;
 					}
 				} else if (VERBOSE) Assert.assertTrue(!x.hbWrite.anyGt(hb));
 
-				// Update the latest race with the current race since we only want to report one race per access event
-				shortestRaceTid = index;
-				shortestRaceIsWrite = true;
-				shortestRaceType = type;
+				int shortestRaceLamport = shortestRaceTid >= 0 ? x.lastWriteLamport[shortestRaceTid] : -1;
+				if (!CAPTURE_SHORTEST_RACE || shortestRaceLamport == -1 || x.lastWriteLamport[index] > shortestRaceLamport) {
+					shortestRaceTid = index;
+					shortestRaceIsWrite = true;
+					shortestRaceType = type;
+				}
+				if (!DISABLE_EVENT_GRAPH && isWrite) {
+					// Keep event numbers of racing events in observed order even if we don't draw an edge, to avoid accidentally reordering them when they are outside the race window
+					thisEventNode.eventNumber = Math.max(thisEventNode.eventNumber, x.lastWriteEvents[index].eventNode.eventNumber + 1);
+					// Draw race edge
+					final CVE nwcDelayed = ts_get_nwc_delayed(td).computeIfAbsent(x, var -> new CVE(INIT_CV_SIZE, null));
+					nwcDelayed.max(x.hbWrite);
+					ts_get_xdp(td).max(nwcDelayed);
+					nwcDelayed.setEventNode(x.hbWrite.eventNode);
+				}
 			}
 		} else {
 			if (VERBOSE) Assert.assertTrue(!x.hbWrite.anyGt(hb));
@@ -2594,17 +2338,27 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 						}
 					} else if (VERBOSE) Assert.assertTrue(!x.hbRead.anyGt(hb));
 
-					// Update the latest race with the current race since we only want to report one race per access event
-					shortestRaceTid = index;
-					shortestRaceIsWrite = false;
-					shortestRaceType = type;
+					// Keep event numbers of racing evenst in observed order even if we don't draw an edge, to avoid accidentally reordering them when they are outside the race window
+					if (!DISABLE_EVENT_GRAPH) thisEventNode.eventNumber = Math.max(thisEventNode.eventNumber, x.lastReadEvents[index].eventNode.eventNumber + 1);
+					//Update the latest race with the current race since we only want to report one race per access event
+					int shortestRaceLamport = shortestRaceTid >= 0 ? (shortestRaceIsWrite ? x.lastWriteLamport[shortestRaceTid] : x.lastReadLamport[shortestRaceTid]) : -1;
+					if (!CAPTURE_SHORTEST_RACE || shortestRaceLamport == -1 || x.lastWriteLamport[index] > shortestRaceLamport) {
+						shortestRaceTid = index;
+						shortestRaceIsWrite = false;
+						shortestRaceType = type;
+					}
+					if (VERBOSE) Assert.assertTrue(x.lastReadEvents[index] != null);
+					if (!DISABLE_EVENT_GRAPH && VERBOSE) Assert.assertTrue(x.lastReadEvents[index].eventNode != null);
+					if (!DISABLE_EVENT_GRAPH) {
+						EventNode.addEdge(x.lastReadEvents[index].eventNode, thisEventNode);
+					}
 				}
 			} else {
 				if (VERBOSE) Assert.assertTrue(!x.hbRead.anyGt(hb));
 				if (VERBOSE) Assert.assertTrue(!x.wcpRead.anyGt(wcpUnionPO));
 			}
 		}
-		return recordRace(x, ae, tid, shortestRaceTid, shortestRaceIsWrite, shortestRaceType, null);
+		return recordRace(x, ae, tid, shortestRaceTid, shortestRaceIsWrite, shortestRaceType, thisEventNode);
 	}
 
 	boolean checkForRacesDC(boolean isWrite, WDCGuardState x, AccessEvent ae, int tid, CV wdc) {
@@ -2639,13 +2393,13 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 		int tid = td.getTid();
 		final CV nwcUnionPO = new CV(nwc);
 		nwcUnionPO.set(tid, hb.get(tid));
-		int shortestRaceTid = -1;
 		CV nwcPOWr = null;
 		if (isWrite) {
 			nwcPOWr = new CV(nwcUnionPO);
 			nwcPOWr.max(nwcSameLockWrites);
 		}
 
+		int shortestRaceTid = -1;
 		boolean shortestRaceIsWrite = false; // only valid if shortestRaceTid != -1
 		RaceType shortestRaceType = RaceType.WBROrdered; // only valid if shortestRaceTid != -1
 
@@ -2654,7 +2408,7 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 			int index = -1;
 			while ((index = x.wdcWrite.nextGt(wdc, index + 1)) != -1) {
 				RaceType type = RaceType.WDCRace;
-				if (x.nwcWrite.get(index) > (isWrite ? nwcPOWr : nwcUnionPO).get(index)) {
+				if (x.nwcWrite.anyGt(isWrite ? nwcPOWr : nwcUnionPO)) {
 					type = RaceType.NWCRace;
 					if (x.hbWrite.get(index) > hb.get(index)) {
 						type = RaceType.HBRace;
@@ -2687,7 +2441,7 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 				int index = -1;
 				while ((index = x.wdcRead.nextGt(wdc, index + 1)) != -1) {
 					RaceType type = RaceType.WDCRace;
-					if (x.nwcRead.get(index) > nwcUnionPO.get(index)) {
+					if (x.nwcRead.anyGt(nwcUnionPO)) {
 						type = RaceType.NWCRace;
 						if (x.hbRead.get(index) > hb.get(index)) {
 							type = RaceType.HBRace;
@@ -2817,57 +2571,6 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 		return recordRace(x, ae, td.getTid(), shortestRaceTid, shortestRaceIsWrite, shortestRaceType, thisEventNode);
 	}
 
-	boolean checkForRacesuDP(boolean isWrite, WDCGuardState x, AccessEvent ae, ShadowThread td, CV udp, RdWrNode thisEventNode) {
-		int shortestRaceTid = -1;
-		boolean shortestRaceIsWrite = false; // only valid if shortestRaceTid != -1
-		RaceType shortestRaceType = RaceType.WBROrdered; // only valid if shortestRaceTid != -1
-		Collection<ShadowLock> heldLocks = td.getLocksHeld();
-		boolean racesWithLastWr = false;
-
-		// First check for race with prior write
-		int index = -1;
-		while ((index = x.udpWrite.nextGt(udp, index + 1)) != -1) {
-			if (findCommonLock(x.heldLocksWrite.get(index), heldLocks) == null) {
-				RaceType type = RaceType.uDPRace;
-				int shortestRaceLamport = shortestRaceTid >= 0 ? x.lastWriteLamport[shortestRaceTid] : -1;
-				if (!CAPTURE_SHORTEST_RACE || shortestRaceLamport == -1 || x.lastWriteLamport[index] > shortestRaceLamport) {
-					shortestRaceTid = index;
-					shortestRaceIsWrite = true;
-					shortestRaceType = type;
-				}
-				// Keep event numbers of racing evenst in observed order even if we don't draw an edge, to avoid accidentally reordering them when they are outside the race window
-				thisEventNode.eventNumber = Math.max(thisEventNode.eventNumber, x.lastWriteEvents[shortestRaceTid].eventNode.eventNumber + 1);
-				// Race edge, only for wr-rd races, and only when the racing write is the last writer of the read. Will be later drawn to a branch.
-				if (!isWrite && x.lastWriteTid == index) {
-					racesWithLastWr = true;
-				}
-			}
-		}
-		// Next check for races with prior reads
-		if (isWrite) {
-			index = -1;
-			while ((index = x.udpRead.nextGt(udp, index + 1)) != -1) {
-				if (findCommonLock(x.heldLocksRead.get(index), heldLocks) == null) {
-					RaceType type = RaceType.uDPRace;
-					int shortestRaceLamport = shortestRaceTid >= 0 ? (shortestRaceIsWrite ? x.lastWriteLamport[shortestRaceTid] : x.lastReadLamport[shortestRaceTid]) : -1;
-					if (!CAPTURE_SHORTEST_RACE || shortestRaceLamport == -1 || x.lastWriteLamport[index] > shortestRaceLamport) {
-						shortestRaceTid = index;
-						shortestRaceIsWrite = false;
-						shortestRaceType = type;
-					}
-					// Keep event numbers of racing evenst in observed order even if we don't draw an edge, to avoid accidentally reordering them when they are outside the race window
-					thisEventNode.eventNumber = Math.max(thisEventNode.eventNumber, x.lastReadEvents[shortestRaceTid].eventNode.eventNumber + 1);
-				}
-			}
-		}
-		if (racesWithLastWr) {
-			udp.max(x.udpWrite);
-			if (!DISABLE_EVENT_GRAPH) EventNode.addEdge(x.lastWriteEvents[x.lastWriteTid].eventNode, thisEventNode);
-
-		}
-		return recordRace(x, ae, td.getTid(), shortestRaceTid, shortestRaceIsWrite, shortestRaceType, thisEventNode);
-	}
-
 	boolean checkForRacesWBR(boolean isWrite, WDCGuardState x, AccessEvent ae, ShadowThread td, CV hb, CV wcp, CV wbr, RdWrNode thisEventNode) {
 		final CV wcpUnionPO = new CV(wcp);
 		int tid = td.getTid();
@@ -2945,7 +2648,6 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 							Assert.assertTrue(x.lastReadEvents[index].eventNode != null);//, "lastReadEvents x: " + x.lastReadEvents.toString() + ", index " + index + " containing dl: " + x.lastReadEvents[index].toString() + " has null event node.");
 						if (!DISABLE_EVENT_GRAPH) {
 							// This thread's last reader node might be same as the last writer node, due to merging
-							//TODO: Tomcat fails if x.lastWriteEvents not checked for null. This would happen if only reads came before the first write?
 							if (x.lastWriteEvents[index] != null && x.lastReadEvents[index].eventNode == x.lastWriteEvents[index].eventNode) {
 								if (VERBOSE)
 									Assert.assertTrue(EventNode.edgeExists(x.lastWriteEvents[index].eventNode, thisEventNode));
@@ -2968,10 +2670,16 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 	}
 
 
-	boolean checkForRacesNWC_WBR(boolean isWrite, WDCGuardState x, AccessEvent ae, ShadowThread td, CV hb, CV nwc, CV wbr, RdWrNode thisEventNode) {
+	// Note: The event graph is generated for WBR if both NWC and WBR are enabled
+	boolean checkForRacesNWC_WBR(boolean isWrite, WDCGuardState x, AccessEvent ae, ShadowThread td, CV hb, CV nwc, CV nwcSameLockWrites, CV wbr, RdWrNode thisEventNode) {
 		final CV nwcUnionPO = new CV(nwc);
 		int tid = td.getTid();
 		nwcUnionPO.set(tid, hb.get(tid));
+		CV nwcPOWr = null;
+		if (isWrite) {
+			nwcPOWr = new CV(nwcUnionPO);
+			nwcPOWr.max(nwcSameLockWrites);
+		}
 		int shortestRaceTid = -1;
 		boolean shortestRaceIsWrite = false; // only valid if shortestRaceTid != -1
 		RaceType shortestRaceType = RaceType.WBROrdered; // only valid if shortestRaceTid != -1
@@ -2983,7 +2691,7 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 			while ((index = x.wbrWrite.nextGt(wbr, index + 1)) != -1) {
 				if (findCommonLock(x.heldLocksWrite.get(index), heldLocks) == null) {
 					RaceType type = RaceType.WBRRace;
-					if (x.nwcWrite.anyGt(nwcUnionPO)) {
+					if (x.nwcWrite.anyGt(isWrite ? nwcPOWr : nwcUnionPO)) { // TODO: This doesn't make sense if there are multiple races
 						type = RaceType.NWCRace;
 						if (x.hbWrite.anyGt(hb)) {
 							type = RaceType.HBRace;
@@ -3062,103 +2770,6 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 				if (VERBOSE) Assert.assertTrue(!x.nwcRead.anyGt(nwcUnionPO));//, "VC x: " + x.nwcRead.toString() + "| VC nwcUnionPO: " + nwcUnionPO.toString());
 				if (VERBOSE) Assert.assertTrue(!x.hbRead.anyGt(hb));
 			}
-		}
-		return recordRace(x, ae, tid, shortestRaceTid, shortestRaceIsWrite, shortestRaceType, thisEventNode);
-	}
-
-	boolean checkForRacesuDP(boolean isWrite, WDCGuardState x, AccessEvent ae, ShadowThread td, CV hb, CV wcp, CV udp, RdWrNode thisEventNode) {
-		final CV wcpUnionPO = new CV(wcp);
-		int tid = td.getTid();
-		wcpUnionPO.set(tid, hb.get(tid));
-		int shortestRaceTid = -1;
-		boolean shortestRaceIsWrite = false; // only valid if shortestRaceTid != -1
-		RaceType shortestRaceType = RaceType.WBROrdered; // only valid if shortestRaceTid != -1
-		Collection<ShadowLock> heldLocks = td.getLocksHeld();
-		boolean racesWithLastWr = false;
-
-		// First check for race with prior write
-		if (x.udpWrite.anyGt(udp)) {
-			int index = -1;
-			while ((index = x.udpWrite.nextGt(udp, index + 1)) != -1) {
-				if (findCommonLock(x.heldLocksWrite.get(index), heldLocks) == null) {
-					RaceType type = RaceType.uDPRace;
-					if (x.wcpWrite.anyGt(wcpUnionPO)) {
-						type = RaceType.WCPRace;
-						if (x.hbWrite.anyGt(hb)) {
-							type = RaceType.HBRace;
-						}
-					} else {
-						if (VERBOSE) Assert.assertTrue(!x.hbWrite.anyGt(hb));
-					}
-					int shortestRaceLamport = shortestRaceTid >= 0 ? x.lastWriteLamport[shortestRaceTid] : -1;
-					if (!CAPTURE_SHORTEST_RACE || shortestRaceLamport == -1 || x.lastWriteLamport[index] > shortestRaceLamport) {
-						shortestRaceTid = index;
-						shortestRaceIsWrite = true;
-						shortestRaceType = type;
-					}
-					// Keep event numbers of racing evenst in observed order even if we don't draw an edge, to avoid accidentally reordering them when they are outside the race window
-					if (!DISABLE_EVENT_GRAPH) thisEventNode.eventNumber = Math.max(thisEventNode.eventNumber, x.lastWriteEvents[index].eventNode.eventNumber + 1);
-					// Race edge, only for wr-rd races, and only when the racing write is the last writer of the read. Will be later drawn to a branch.
-					if (!isWrite && x.lastWriteTid == index) {
-						racesWithLastWr = true;
-					}
-				} else {
-					if (VERBOSE) Assert.assertTrue(!x.wcpWrite.anyGt(wcpUnionPO));//, "VC x: " + x.wcpWrite.toString() + "| VC wcpUnionPO: " + wcpUnionPO.toString());
-					if (VERBOSE) Assert.assertTrue(!x.hbWrite.anyGt(hb));
-				}
-			}
-		} else {
-			if (VERBOSE) Assert.assertTrue(!x.wcpWrite.anyGt(wcpUnionPO));//, "VC x: " + x.wcpWrite.toString() + "| VC wcpUnionPO: " + wcpUnionPO.toString());
-			if (VERBOSE) Assert.assertTrue(!x.hbWrite.anyGt(hb));
-		}
-		// Next check for races with prior reads
-		if (isWrite) {
-			if (x.udpRead.anyGt(udp)) {
-				int index = -1;
-				while ((index = x.udpRead.nextGt(udp, index + 1)) != -1) {
-					if (findCommonLock(x.heldLocksRead.get(index), heldLocks) == null) {
-						RaceType type = RaceType.uDPRace;
-						if (x.wcpRead.get(index) > wcpUnionPO.get(index)) {
-							type = RaceType.WCPRace;
-							if (x.hbRead.get(index) > hb.get(index)) {
-								type = RaceType.HBRace;
-							}
-						} else {
-							if (VERBOSE) Assert.assertTrue(x.hbRead.get(index) <= hb.get(index));
-						}
-						// Keep event numbers of racing events in observed order even if we don't draw an edge, to avoid accidentally reordering them when they are outside the race window
-						if (!DISABLE_EVENT_GRAPH) thisEventNode.eventNumber = Math.max(thisEventNode.eventNumber, x.lastReadEvents[index].eventNode.eventNumber + 1);
-						//Update the latest race with the current race since we only want to report one race per access event
-						int shortestRaceLamport = shortestRaceTid >= 0 ? (shortestRaceIsWrite ? x.lastWriteLamport[shortestRaceTid] : x.lastReadLamport[shortestRaceTid]) : -1;
-						if (!CAPTURE_SHORTEST_RACE || shortestRaceLamport == -1 || x.lastWriteLamport[index] > shortestRaceLamport) {
-							shortestRaceTid = index;
-							shortestRaceIsWrite = false;
-							shortestRaceType = type;
-						}
-						if (VERBOSE)
-							Assert.assertTrue(x.lastReadEvents[index] != null);//, "lastReadEvents x: " + x.lastReadEvents.toString() + ", index " + index + " is null");
-						if (!DISABLE_EVENT_GRAPH && VERBOSE)
-							Assert.assertTrue(x.lastReadEvents[index].eventNode != null);//, "lastReadEvents x: " + x.lastReadEvents.toString() + ", index " + index + " containing dl: " + x.lastReadEvents[index].toString() + " has null event node.");
-						if (!DISABLE_EVENT_GRAPH) {
-							// This thread's last reader node might be same as the last writer node, due to merging
-							//TODO: Tomcat fails if x.lastWriteEvents not checked for null. This would happen if only reads came before the first write?
-							if (VERBOSE && x.lastWriteEvents[index] != null && x.lastReadEvents[index].eventNode == x.lastWriteEvents[index].eventNode) {
-								Assert.assertTrue(EventNode.edgeExists(x.lastWriteEvents[index].eventNode, thisEventNode));
-							}
-						}
-					} else {
-						if (VERBOSE) Assert.assertTrue(!x.wcpRead.anyGt(wcpUnionPO));//, "VC x: " + x.wcpRead.toString() + "| VC wcpUnionPO: " + wcpUnionPO.toString());
-						if (VERBOSE) Assert.assertTrue(!x.hbRead.anyGt(hb));
-					}
-				}
-			} else {
-				if (VERBOSE) Assert.assertTrue(!x.wcpRead.anyGt(wcpUnionPO));//, "VC x: " + x.wcpRead.toString() + "| VC wcpUnionPO: " + wcpUnionPO.toString());
-				if (VERBOSE) Assert.assertTrue(!x.hbRead.anyGt(hb));
-			}
-		}
-		if (racesWithLastWr) {
-			udp.max(x.udpWrite);
-			if (!DISABLE_EVENT_GRAPH) EventNode.addEdge(x.lastWriteEvents[x.lastWriteTid].eventNode, thisEventNode);
 		}
 		return recordRace(x, ae, tid, shortestRaceTid, shortestRaceIsWrite, shortestRaceType, thisEventNode);
 	}
@@ -3360,12 +2971,17 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 		return recordRace(x, ae, tid, shortestRaceTid, shortestRaceIsWrite, shortestRaceType, thisEventNode);
 	}
 
-	boolean checkForRacesWBRNWC(boolean isWrite, WDCGuardState x, AccessEvent ae, ShadowThread td, CV hb, CV wcp, CV nwc, CV wdc, CV wbr, RdWrNode thisEventNode) {
+	boolean checkForRacesWBRNWC(boolean isWrite, WDCGuardState x, AccessEvent ae, ShadowThread td, CV hb, CV wcp, CV nwc, CV nwcSameLockWrites, CV wdc, CV wbr, RdWrNode thisEventNode) {
 		final CV nwcUnionPO = new CV(nwc);
 		final CV wcpUnionPO = new CV(wcp);
 		int tid = td.getTid();
 		nwcUnionPO.set(tid, hb.get(tid));
 		wcpUnionPO.set(tid, hb.get(tid));
+		CV nwcPOWr = null;
+		if (isWrite) {
+			nwcPOWr = new CV(nwcUnionPO);
+			nwcPOWr.max(nwcSameLockWrites);
+		}
 		int shortestRaceTid = -1;
 		boolean shortestRaceIsWrite = false; // only valid if shortestRaceTid != -1
 		RaceType shortestRaceType = RaceType.WBROrdered; // only valid if shortestRaceTid != -1
@@ -3379,7 +2995,7 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 					RaceType type = RaceType.WBRRace;
 					if (x.wdcWrite.anyGt(wdc)) {
 						type = RaceType.WDCRace;
-						if (x.nwcWrite.anyGt(nwcUnionPO)) {
+						if (x.nwcWrite.anyGt(isWrite ? nwcPOWr : nwcUnionPO)) {
 							type = RaceType.NWCRace;
 							if (x.wcpWrite.anyGt(wcpUnionPO)) {
 								type = RaceType.WCPRace;
@@ -3472,51 +3088,51 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 		return recordRace(x, ae, tid, shortestRaceTid, shortestRaceIsWrite, shortestRaceType, thisEventNode);
 	}
 
-	boolean checkForRacesWBRNWC(boolean isWrite, WDCGuardState x, AccessEvent ae, ShadowThread td, CV hb, CV wcp, CV nwc, CV wbr, RdWrNode thisEventNode) {
+	// TODO: This needs to be fixed, it does not detect WBR races.
+	boolean checkForRacesWBRNWC(boolean isWrite, WDCGuardState x, AccessEvent ae, ShadowThread td, CV hb, CV wcp, CV nwc, CV nwcSameLockWrites, CV wbr, RdWrNode thisEventNode) {
+		Assert.assertTrue(false, "Not implemented!");
 		final CV nwcUnionPO = new CV(nwc);
 		final CV wcpUnionPO = new CV(wcp);
 		int tid = td.getTid();
 		nwcUnionPO.set(tid, hb.get(tid));
 		wcpUnionPO.set(tid, hb.get(tid));
+		CV nwcPOWr = null;
+		if (isWrite) {
+			nwcPOWr = new CV(nwcUnionPO);
+			nwcPOWr.max(nwcSameLockWrites);
+		}
 		int shortestRaceTid = -1;
 		boolean shortestRaceIsWrite = false; // only valid if shortestRaceTid != -1
 		RaceType shortestRaceType = RaceType.WBROrdered; // only valid if shortestRaceTid != -1
 		Collection<ShadowLock> heldLocks = td.getLocksHeld();
 
 		// First check for race with prior write
-		if (x.wbrWrite.anyGt(wbr)) {
+		if (x.nwcWrite.anyGt(isWrite ? nwcPOWr : nwcUnionPO)) {
 			int index = -1;
-			while ((index = x.wbrWrite.nextGt(wbr, index + 1)) != -1) {
-				if (findCommonLock(x.heldLocksWrite.get(index), heldLocks) == null) {
-					RaceType type = RaceType.WBRRace;
-					if (x.nwcWrite.anyGt(nwcUnionPO)) {
-						type = RaceType.NWCRace;
-						if (x.wcpWrite.anyGt(wcpUnionPO)) {
-							type = RaceType.WCPRace;
-							if (x.hbWrite.anyGt(hb)) {
-								type = RaceType.HBRace;
-							}
-						}
-					} else {
-						if (VERBOSE) Assert.assertTrue(!x.hbWrite.anyGt(hb));
-					}
-					int shortestRaceLamport = shortestRaceTid >= 0 ? x.lastWriteLamport[shortestRaceTid] : -1;
-					if (!CAPTURE_SHORTEST_RACE || shortestRaceLamport == -1 || x.lastWriteLamport[index] > shortestRaceLamport) {
-						shortestRaceTid = index;
-						shortestRaceIsWrite = true;
-						shortestRaceType = type;
-					}
-					// Keep event numbers of racing evenst in observed order even if we don't draw an edge, to avoid accidentally reordering them when they are outside the race window
-					if (!DISABLE_EVENT_GRAPH) thisEventNode.eventNumber = Math.max(thisEventNode.eventNumber, x.lastWriteEvents[index].eventNode.eventNumber + 1);
-					// Race edge, only for wr-rd races, and only when the racing write is the last writer of the read. Will be later drawn to a branch.
-					if (!isWrite && x.lastWriteTid == index) {
-						Map<ShadowVar,CVE> delayed = ts_get_wbr_delayed(td);
-						CVE edge = new CVE(x.wbrWrite, x.lastWriteEvents[index].eventNode);
-						if (!NO_SDG) edge = new CVED(edge, thisEventNode, ae.getAccessInfo().getLoc().getSourceLoc());
-						delayed.put(x, edge);
+			while ((index = x.nwcWrite.nextGt(isWrite ? nwcPOWr : nwcUnionPO, index + 1)) != -1) {
+				RaceType type = RaceType.NWCRace;
+				if (x.wcpWrite.anyGt(wcpUnionPO)) {
+					type = RaceType.WCPRace;
+					if (x.hbWrite.anyGt(hb)) {
+						type = RaceType.HBRace;
 					}
 				} else {
 					if (VERBOSE) Assert.assertTrue(!x.hbWrite.anyGt(hb));
+				}
+				int shortestRaceLamport = shortestRaceTid >= 0 ? x.lastWriteLamport[shortestRaceTid] : -1;
+				if (!CAPTURE_SHORTEST_RACE || shortestRaceLamport == -1 || x.lastWriteLamport[index] > shortestRaceLamport) {
+					shortestRaceTid = index;
+					shortestRaceIsWrite = true;
+					shortestRaceType = type;
+				}
+				// Keep event numbers of racing evenst in observed order even if we don't draw an edge, to avoid accidentally reordering them when they are outside the race window
+				if (!DISABLE_EVENT_GRAPH) thisEventNode.eventNumber = Math.max(thisEventNode.eventNumber, x.lastWriteEvents[index].eventNode.eventNumber + 1);
+				// Race edge, only for wr-rd races, and only when the racing write is the last writer of the read. Will be later drawn to a branch.
+				if (!isWrite && x.lastWriteTid == index) {
+					Map<ShadowVar,CVE> delayed = ts_get_wbr_delayed(td);
+					CVE edge = new CVE(x.wbrWrite, x.lastWriteEvents[index].eventNode);
+					if (!NO_SDG) edge = new CVED(edge, thisEventNode, ae.getAccessInfo().getLoc().getSourceLoc());
+					delayed.put(x, edge);
 				}
 			}
 		} else {
@@ -3524,18 +3140,16 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 		}
 		// Next check for races with prior reads
 		if (isWrite) {
-			if (x.wbrRead.anyGt(wbr)) {
+			if (x.nwcRead.anyGt(nwcUnionPO)) {
 				int index = -1;
-				while ((index = x.wbrRead.nextGt(wbr, index + 1)) != -1) {
-					if (findCommonLock(x.heldLocksRead.get(index), heldLocks) == null) {
-						RaceType type = RaceType.WBRRace;
-						if (x.nwcRead.get(index) > nwcUnionPO.get(index)) {
-							type = RaceType.NWCRace;
-							if (x.wcpRead.get(index) > wcpUnionPO.get(index)) {
-								type = RaceType.WCPRace;
-								if (x.hbRead.get(index) > hb.get(index)) {
-									type = RaceType.HBRace;
-								}
+				while ((index = x.nwcRead.nextGt(nwcUnionPO, index + 1)) != -1) {
+					RaceType type = RaceType.NWCRace;
+					if (x.nwcRead.get(index) > nwcUnionPO.get(index)) {
+						type = RaceType.NWCRace;
+						if (x.wcpRead.get(index) > wcpUnionPO.get(index)) {
+							type = RaceType.WCPRace;
+							if (x.hbRead.get(index) > hb.get(index)) {
+								type = RaceType.HBRace;
 							}
 						}
 						// Keep event numbers of racing evenst in observed order even if we don't draw an edge, to avoid accidentally reordering them when they are outside the race window
@@ -3564,263 +3178,6 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 					}
 				}
 			} else {
-				if (VERBOSE) Assert.assertTrue(!x.hbRead.anyGt(hb));
-			}
-		}
-		return recordRace(x, ae, tid, shortestRaceTid, shortestRaceIsWrite, shortestRaceType, thisEventNode);
-	}
-
-	boolean checkForRacesWBR(boolean isWrite, WDCGuardState x, AccessEvent ae, ShadowThread td, CV hb, CV wcp, CV wdc, CV udp, CV wbr, RdWrNode thisEventNode) {
-		final CV wcpUnionPO = new CV(wcp);
-		int tid = td.getTid();
-		wcpUnionPO.set(tid, hb.get(tid));
-		int shortestRaceTid = -1;
-		boolean shortestRaceIsWrite = false; // only valid if shortestRaceTid != -1
-		RaceType shortestRaceType = RaceType.WBROrdered; // only valid if shortestRaceTid != -1
-		Collection<ShadowLock> heldLocks = td.getLocksHeld();
-		boolean uDPRacesWithLastWr = false;
-
-		// First check for race with prior write
-		if (x.wbrWrite.anyGt(wbr)) {
-			int index = -1;
-			while ((index = x.wbrWrite.nextGt(wbr, index + 1)) != -1) {
-				if (findCommonLock(x.heldLocksWrite.get(index), heldLocks) == null) {
-					RaceType type = RaceType.WBRRace;
-					if (x.udpWrite.get(index) > udp.get(index)) {
-						type = RaceType.uDPRace;
-						if (x.wdcWrite.anyGt(wdc)) {
-							type = RaceType.WDCRace;
-							if (x.wcpWrite.anyGt(wcpUnionPO)) {
-								type = RaceType.WCPRace;
-								if (x.hbWrite.anyGt(hb)) {
-									type = RaceType.HBRace;
-								}
-							} else {
-								if (VERBOSE) Assert.assertTrue(!x.hbWrite.anyGt(hb));
-							}
-						} else {
-							if (VERBOSE)
-								Assert.assertTrue(!x.wcpWrite.anyGt(wcpUnionPO));//, "VC x: " + x.wcpWrite.toString() + "| VC wcpUnionPO: " + wcpUnionPO.toString());
-							if (VERBOSE) Assert.assertTrue(!x.hbWrite.anyGt(hb));
-						}
-						if (!isWrite && x.lastWriteTid == index) {
-							uDPRacesWithLastWr = true;
-						}
-					}
-					int shortestRaceLamport = shortestRaceTid >= 0 ? x.lastWriteLamport[shortestRaceTid] : -1;
-					if (!CAPTURE_SHORTEST_RACE || shortestRaceLamport == -1 || x.lastWriteLamport[index] > shortestRaceLamport) {
-						shortestRaceTid = index;
-						shortestRaceIsWrite = true;
-						shortestRaceType = type;
-					}
-					// Keep event numbers of racing evenst in observed order even if we don't draw an edge, to avoid accidentally reordering them when they are outside the race window
-					if (!DISABLE_EVENT_GRAPH)
-						thisEventNode.eventNumber = Math.max(thisEventNode.eventNumber, x.lastWriteEvents[index].eventNode.eventNumber + 1);
-					// Race edge, only for wr-rd races, and only when the racing write is the last writer of the read. Will be later drawn to a branch.
-					if (!isWrite && x.lastWriteTid == index) {
-						Map<ShadowVar, CVE> delayed = ts_get_wbr_delayed(td);
-						CVE edge = new CVE(x.wbrWrite, x.lastWriteEvents[index].eventNode);
-						if (!NO_SDG) edge = new CVED(edge, thisEventNode, ae.getAccessInfo().getLoc().getSourceLoc());
-						delayed.put(x, edge);
-					}
-				} else {
-					if (VERBOSE) Assert.assertTrue(!x.wdcWrite.anyGt(wdc));
-					if (VERBOSE)
-						Assert.assertTrue(!x.wcpWrite.anyGt(wcpUnionPO));//, "VC x: " + x.wcpWrite.toString() + "| VC wcpUnionPO: " + wcpUnionPO.toString());
-					if (VERBOSE) Assert.assertTrue(!x.hbWrite.anyGt(hb));
-				}
-			}
-		} else {
-			if (VERBOSE) Assert.assertTrue(!x.wdcWrite.anyGt(wdc));
-			if (VERBOSE)
-				Assert.assertTrue(!x.wcpWrite.anyGt(wcpUnionPO));//, "VC x: " + x.wcpWrite.toString() + "| VC wcpUnionPO: " + wcpUnionPO.toString());
-			if (VERBOSE) Assert.assertTrue(!x.hbWrite.anyGt(hb));
-		}
-		// Next check for races with prior reads
-		if (isWrite) {
-			if (x.wbrRead.anyGt(wbr)) {
-				int index = -1;
-				while ((index = x.wbrRead.nextGt(wbr, index + 1)) != -1) {
-					if (findCommonLock(x.heldLocksRead.get(index), heldLocks) == null) {
-						RaceType type = RaceType.WBRRace;
-						if (x.udpRead.get(index) > udp.get(index)) {
-							type = RaceType.uDPRace;
-							if (x.wdcRead.get(index) > wdc.get(index)) {
-								type = RaceType.WDCRace;
-								if (x.wcpRead.get(index) > wcpUnionPO.get(index)) {
-									type = RaceType.WCPRace;
-									if (x.hbRead.get(index) > hb.get(index)) {
-										type = RaceType.HBRace;
-									}
-								} else {
-									if (VERBOSE) Assert.assertTrue(x.hbRead.get(index) <= hb.get(index));
-								}
-							} else {
-								if (VERBOSE) Assert.assertTrue(x.wcpRead.get(index) <= wcpUnionPO.get(index));
-							}
-						}
-						// Keep event numbers of racing evenst in observed order even if we don't draw an edge, to avoid accidentally reordering them when they are outside the race window
-						if (!DISABLE_EVENT_GRAPH)
-							thisEventNode.eventNumber = Math.max(thisEventNode.eventNumber, x.lastReadEvents[index].eventNode.eventNumber + 1);
-						//Update the latest race with the current race since we only want to report one race per access event
-						int shortestRaceLamport = shortestRaceTid >= 0 ? (shortestRaceIsWrite ? x.lastWriteLamport[shortestRaceTid] : x.lastReadLamport[shortestRaceTid]) : -1;
-						if (!CAPTURE_SHORTEST_RACE || shortestRaceLamport == -1 || x.lastWriteLamport[index] > shortestRaceLamport) {
-							shortestRaceTid = index;
-							shortestRaceIsWrite = false;
-							shortestRaceType = type;
-						}
-						if (VERBOSE)
-							Assert.assertTrue(x.lastReadEvents[index] != null);//, "lastReadEvents x: " + x.lastReadEvents.toString() + ", index " + index + " is null");
-						if (!DISABLE_EVENT_GRAPH && VERBOSE)
-							Assert.assertTrue(x.lastReadEvents[index].eventNode != null);//, "lastReadEvents x: " + x.lastReadEvents.toString() + ", index " + index + " containing dl: " + x.lastReadEvents[index].toString() + " has null event node.");
-						if (!DISABLE_EVENT_GRAPH) {
-							// This thread's last reader node might be same as the last writer node, due to merging
-							//TODO: Tomcat fails if x.lastWriteEvents not checked for null. This would happen if only reads came before the first write?
-							if (x.lastWriteEvents[index] != null && x.lastReadEvents[index].eventNode == x.lastWriteEvents[index].eventNode) {
-								if (VERBOSE)
-									Assert.assertTrue(EventNode.edgeExists(x.lastWriteEvents[index].eventNode, thisEventNode));
-							} else {
-								// We don't draw race edges for rd-wr races
-//								EventNode.addEdge(x.lastReadEvents[index].eventNode, thisEventNode);
-							}
-						}
-					} else {
-						if (VERBOSE) Assert.assertTrue(!x.wdcRead.anyGt(wdc));
-						if (VERBOSE)
-							Assert.assertTrue(!x.wcpRead.anyGt(wcpUnionPO));//, "VC x: " + x.wcpRead.toString() + "| VC wcpUnionPO: " + wcpUnionPO.toString());
-						if (VERBOSE) Assert.assertTrue(!x.hbRead.anyGt(hb));
-					}
-				}
-			} else {
-				if (VERBOSE) Assert.assertTrue(!x.wdcRead.anyGt(wdc));
-				if (VERBOSE)
-					Assert.assertTrue(!x.wcpRead.anyGt(wcpUnionPO));//, "VC x: " + x.wcpRead.toString() + "| VC wcpUnionPO: " + wcpUnionPO.toString());
-				if (VERBOSE) Assert.assertTrue(!x.hbRead.anyGt(hb));
-			}
-		}
-		if (uDPRacesWithLastWr) {
-			udp.max(x.udpWrite);
-		}
-		return recordRace(x, ae, tid, shortestRaceTid, shortestRaceIsWrite, shortestRaceType, thisEventNode);
-	}
-
-		boolean checkForRacesLSHE(boolean isWrite, WDCGuardState x, AccessEvent ae, ShadowThread td, CV hb, CV wcp, CV wdc, CV wbr, CV lshe, RdWrNode thisEventNode) {
-		final CV wcpUnionPO = new CV(wcp);
-		int tid = td.getTid();
-		wcpUnionPO.set(tid, hb.get(tid));
-		int shortestRaceTid = -1;
-		boolean shortestRaceIsWrite = false; // only valid if shortestRaceTid != -1
-		RaceType shortestRaceType = RaceType.WBROrdered; // only valid if shortestRaceTid != -1
-		Collection<ShadowLock> heldLocks = td.getLocksHeld();
-
-		// First check for race with prior write
-		if (x.lsheWrite.anyGt(lshe)) {
-			int index = -1;
-			while ((index = x.lsheWrite.nextGt(lshe, index + 1)) != -1) {
-				if (x.heldLocksWrite.get(index) == null) return false;
-				if (findCommonLock(x.heldLocksWrite.get(index), heldLocks) == null) {
-					RaceType type = RaceType.LSHERace;
-					if (x.wbrWrite.anyGt(wbr)) {
-						type = RaceType.WBRRace;
-						if (x.wdcWrite.anyGt(wdc)) {
-							type = RaceType.WDCRace;
-							if (x.wcpWrite.anyGt(wcpUnionPO)) {
-								type = RaceType.WCPRace;
-								if (x.hbWrite.anyGt(hb)) {
-									type = RaceType.HBRace;
-								}
-							} else {
-								if (VERBOSE) Assert.assertTrue(!x.hbWrite.anyGt(hb));
-							}
-						} else {
-							if (VERBOSE) Assert.assertTrue(!x.wcpWrite.anyGt(wcpUnionPO));
-							if (VERBOSE) Assert.assertTrue(!x.hbWrite.anyGt(hb));
-						}
-						// Keep event numbers of racing events in observed order even if we don't draw an edge, to avoid accidentally reordering them when they are outside the race window
-						if (!DISABLE_EVENT_GRAPH)
-							thisEventNode.eventNumber = Math.max(thisEventNode.eventNumber, x.lastWriteEvents[index].eventNode.eventNumber + 1);
-						// Race edge, only for wr-rd races, and only when the racing write is the last writer of the read. Will be later drawn to a branch.
-						if (!isWrite && x.lastWriteTid == index) {
-							Map<ShadowVar, CVE> delayed = ts_get_wbr_delayed(td);
-							CVE edge = new CVE(x.wbrWrite, x.lastWriteEvents[index].eventNode);
-							if (!NO_SDG) edge = new CVED(edge, thisEventNode, ae.getAccessInfo().getLoc().getSourceLoc());
-							delayed.put(x, edge);
-						}
-					} else {
-						if (VERBOSE) Assert.assertTrue(!x.wdcWrite.anyGt(wdc));
-						if (VERBOSE) Assert.assertTrue(!x.wcpWrite.anyGt(wcpUnionPO));
-						if (VERBOSE) Assert.assertTrue(!x.hbWrite.anyGt(hb));
-					}
-					int shortestRaceLamport = shortestRaceTid >= 0 ? x.lastWriteLamport[shortestRaceTid] : -1;
-					if (!CAPTURE_SHORTEST_RACE || shortestRaceLamport == -1 || x.lastWriteLamport[index] > shortestRaceLamport) {
-						shortestRaceTid = index;
-						shortestRaceIsWrite = true;
-						shortestRaceType = type;
-					}
-				} else {
-					if (VERBOSE) Assert.assertTrue(!x.wdcWrite.anyGt(wdc));
-					if (VERBOSE) Assert.assertTrue(!x.wcpWrite.anyGt(wcpUnionPO));
-					if (VERBOSE) Assert.assertTrue(!x.hbWrite.anyGt(hb));
-				}
-			}
-		} else {
-			if (VERBOSE) Assert.assertTrue(!x.wdcWrite.anyGt(wdc));
-			if (VERBOSE) Assert.assertTrue(!x.wcpWrite.anyGt(wcpUnionPO));
-			if (VERBOSE) Assert.assertTrue(!x.hbWrite.anyGt(hb));
-		}
-		// Next check for races with prior reads
-		if (isWrite) {
-			if (x.lsheRead.anyGt(lshe)) {
-				int index = -1;
-				while ((index = x.lsheRead.nextGt(lshe, index + 1)) != -1) {
-					if (findCommonLock(x.heldLocksRead.get(index), heldLocks) == null) {
-						RaceType type = RaceType.LSHERace;
-						if (x.wbrRead.get(index) > wbr.get(index)) {
-							type = RaceType.WBRRace;
-							if (x.wdcRead.get(index) > wdc.get(index)) {
-								type = RaceType.WDCRace;
-								if (x.wcpRead.get(index) > wcpUnionPO.get(index)) {
-									type = RaceType.WCPRace;
-									if (x.hbRead.get(index) > hb.get(index)) {
-										type = RaceType.HBRace;
-									}
-								} else {
-									if (VERBOSE) Assert.assertTrue(x.hbRead.get(index) <= hb.get(index));
-								}
-							} else {
-								if (VERBOSE) Assert.assertTrue(x.wcpRead.get(index) <= wcpUnionPO.get(index));
-							}
-						} else {
-							if (VERBOSE) Assert.assertTrue(x.wdcRead.get(index) <= wdc.get(index));
-						}
-						//Update the latest race with the current race since we only want to report one race per access event
-						int shortestRaceLamport = shortestRaceTid >= 0 ? (shortestRaceIsWrite ? x.lastWriteLamport[shortestRaceTid] : x.lastReadLamport[shortestRaceTid]) : -1;
-						if (!CAPTURE_SHORTEST_RACE || shortestRaceLamport == -1 || x.lastWriteLamport[index] > shortestRaceLamport) {
-							shortestRaceTid = index;
-							shortestRaceIsWrite = false;
-							shortestRaceType = type;
-						}
-						if (VERBOSE)
-							Assert.assertTrue(x.lastReadEvents[index] != null);//, "lastReadEvents x: " + x.lastReadEvents.toString() + ", index " + index + " is null");
-						if (!DISABLE_EVENT_GRAPH && VERBOSE)
-							Assert.assertTrue(x.lastReadEvents[index].eventNode != null);//, "lastReadEvents x: " + x.lastReadEvents.toString() + ", index " + index + " containing dl: " + x.lastReadEvents[index].toString() + " has null event node.");
-						if (!DISABLE_EVENT_GRAPH) {
-							// This thread's last reader node might be same as the last writer node, due to merging
-							//TODO: Tomcat fails if x.lastWriteEvents not checked for null. This would happen if only reads came before the first write?
-							if (x.lastWriteEvents[index] != null && x.lastReadEvents[index].eventNode == x.lastWriteEvents[index].eventNode) {
-								if (VERBOSE)
-									Assert.assertTrue(EventNode.edgeExists(x.lastWriteEvents[index].eventNode, thisEventNode));
-							}
-						}
-					} else {
-						if (VERBOSE) Assert.assertTrue(!x.wdcRead.anyGt(wdc));
-						if (VERBOSE) Assert.assertTrue(!x.wcpRead.anyGt(wcpUnionPO));//, "VC x: " + x.wcpRead.toString() + "| VC wcpUnionPO: " + wcpUnionPO.toString());
-						if (VERBOSE) Assert.assertTrue(!x.hbRead.anyGt(hb));
-					}
-				}
-			}  else {
-				if (VERBOSE) Assert.assertTrue(!x.wdcRead.anyGt(wdc));
-				if (VERBOSE) Assert.assertTrue(!x.wcpRead.anyGt(wcpUnionPO));//, "VC x: " + x.wcpRead.toString() + "| VC wcpUnionPO: " + wcpUnionPO.toString());
 				if (VERBOSE) Assert.assertTrue(!x.hbRead.anyGt(hb));
 			}
 		}
@@ -3889,15 +3246,28 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 					final CV nwc = ts_get_nwc(td);
 					if (fae.isWrite()) {
 						nwc.max(vd.hbRead);
+						if (vd.nwcWrite.anyGt(nwc)) { // There's a write--write conflict that may be useful
+							final CVE nwcDelayed = ts_get_nwc_delayed(td).computeIfAbsent(fae.getShadow(), x -> new CVE(INIT_CV_SIZE, null));
+							nwcDelayed.max(nwc);
+							ts_get_xdp(td).max(nwcDelayed);
+							if (!DISABLE_EVENT_GRAPH && !hasWBR) {
+								nwcDelayed.setEventNode(vd.nwcWrite.eventNode);
+								vd.nwcWrite.setEventNode(thisEventNode);
+							}
+						}
 						vd.nwcWrite.max(nwc);
-						ts_get_nwc_delayed(td)
-								.computeIfAbsent(fae.getShadow(), x -> new CV(INIT_CV_SIZE))
-								.max(nwc);
+						if (hasWCP && VERBOSE) Assert.assertFalse(vd.nwcWrite.anyGt(vd.wcpWrite));
 					} else { // isRead
 						nwc.max(vd.hbWrite);
+						if (!DISABLE_EVENT_GRAPH && !hasWBR && vd.nwcWrite.eventNode != null /* there was a write before this read */)
+							EventNode.addEdge(vd.nwcWrite.eventNode, thisEventNode);
 						// Apply any delayed wr-wr conflict edges
-						CV delayed = ts_get_nwc_delayed(td).remove(fae.getShadow());
-						if (delayed != null) nwc.max(delayed);
+						CVE delayed = ts_get_nwc_delayed(td).remove(fae.getShadow());
+						if (delayed != null) {
+							Assert.assertTrue(delayed.eventNode != null);
+							if (!DISABLE_EVENT_GRAPH && !hasWBR) EventNode.addEdge(delayed.eventNode, thisEventNode);
+							nwc.max(delayed);
+						}
 						vd.nwcRead.max(nwc);
 					}
 				}
@@ -3910,19 +3280,6 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 					} else { // isRead
 						wdc.max(vd.wdcWrite);
 						vd.wdcRead.max(wdc);
-					}
-				}
-				if (hasUDP) {
-					final CV udp = ts_get_udp(td);
-					if (fae.isWrite()) {
-						vd.udp.max(udp);
-						vd.udp.setEventNode(thisEventNode);
-						vd.udpWrites.set(tid, udp.get(tid));
-					} else { /* is read */
-						if (!DISABLE_EVENT_GRAPH && vd.udp.anyGt(udp) && (uDP || WCP_uDP)) {
-							EventNode.addEdge(vd.udp.eventNode, thisEventNode);
-						}
-						vd.udp.max(udp);
 					}
 				}
 				if (hasWBR) {
@@ -3959,8 +3316,6 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 					ts_get_hb(td).inc(td.getTid());
 				if (hasDC)
 					ts_get_wdc(td).inc(td.getTid());
-				if (hasUDP)
-					ts_get_udp(td).inc(td.getTid());
 				if (hasWBR)
 					ts_get_wbr(td).inc(td.getTid());
 				
@@ -4152,30 +3507,18 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 				forkedWDC.max(wdc);
 				wdc.inc(thisTid);
 			}
-			if (hasUDP) {
-				final CV uDP = ts_get_udp(td);
-				final CV forkeduDP = ts_get_udp(forked);
-				forkeduDP.max(uDP);
-				uDP.inc(thisTid);
-			}
 			if (hasWBR) {
 				final CV wbr = ts_get_wbr(td);
 				final CV forkedWBR = ts_get_wbr(forked);
 				forkedWBR.max(wbr);
 				wbr.inc(thisTid);
 			}
-			if (hasLSHE) {
-				final CV lshe = ts_get_lshe(td);
-				final CV forkedLSHE = ts_get_lshe(forked);
-				forkedLSHE.max(lshe);
-				lshe.inc(thisTid);
-			}
 			
 			if (!DISABLE_EVENT_GRAPH) {
 				if (hasWBR) {
 					ts_set_wbr(forked, new CVE(ts_get_wbr(forked), thisEventNode)); // for generating event node graph
-				} else if (hasUDP) {
-					ts_set_udp(forked, new CVE(ts_get_udp(forked), thisEventNode));
+				} else if (hasNWC) {
+					ts_set_nwc(forked, new CVE(ts_get_nwc(forked), thisEventNode));
 				}
 			}
 		}
@@ -4231,14 +3574,8 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 			if (hasDC) {
 				ts_get_wdc(td).max(ts_get_wdc(joining));
 			}
-			if (hasUDP) {
-				ts_get_udp(td).max(ts_get_udp(joining));
-			}
 			if (hasWBR) {
 				ts_get_wbr(td).max(ts_get_wbr(joining));
-			}
-			if (hasLSHE) {
-				ts_get_lshe(td).max(ts_get_lshe(joining));
 			}
 		}
 
@@ -4352,14 +3689,8 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 		if (hasDC) {
 			ts_get_wdc(currentThread).max(old); // Updating WDC to HB seems fine at a barrier (?)
 		}
-		if (hasUDP) {
-			ts_get_udp(currentThread).max(old);
-		}
 		if (hasWBR) {
 			ts_get_wbr(currentThread).max(old);
-		}
-		if (hasLSHE) {
-			ts_get_lshe(currentThread).max(old);
 		}
 	}
 
@@ -4396,32 +3727,23 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 				}
 				if (hasNWC) {
 					classInitTime.get(e.getRRClass()).nwcWrite.max(ts_get_nwc(td));
+					if (hasWCP && VERBOSE) Assert.assertFalse(classInitTime.get(e.getRRClass()).nwcWrite.anyGt(classInitTime.get(e.getRRClass()).wcpWrite));
 				}
 				if (hasDC) {
 					final CV wdc = ts_get_wdc(td);
 					classInitTime.get(e.getRRClass()).wdcWrite.max(wdc);
 					wdc.inc(tid);
 				}
-				if (hasUDP) {
-					final CV udp = ts_get_udp(td);
-					classInitTime.get(e.getRRClass()).udp.max(udp);
-					udp.inc(tid);
-				}
 				if (hasWBR) {
 					final CV wbr = ts_get_wbr(td);
 					classInitTime.get(e.getRRClass()).wbr.max(wbr);
 					wbr.inc(tid);
 				}
-				if (hasLSHE) {
-					final CV lshe = ts_get_lshe(td);
-					classInitTime.get(e.getRRClass()).lshe.max(lshe);
-					lshe.inc(tid);
-				}
 				if (!DISABLE_EVENT_GRAPH) {
 					if (hasWBR) {
 						classInitTime.get(e.getRRClass()).wbr.setEventNode(thisEventNode);
-					} else if (hasUDP) {
-						classInitTime.get(e.getRRClass()).udp.setEventNode(thisEventNode);
+					} else if (hasNWC) {
+						classInitTime.get(e.getRRClass()).nwcWrite.setEventNode(thisEventNode);
 					}
 				}
 			}
@@ -4458,9 +3780,9 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 						if (initTime.wbr.anyGt(ts_get_wbr(td))) {
 							EventNode.addEdge(initTime.wbr.eventNode, thisEventNode);
 						}
-					} else if (hasUDP) {
-						if (initTime.udp.anyGt(ts_get_udp(td))) {
-							EventNode.addEdge(initTime.udp.eventNode, thisEventNode);
+					} else if (hasNWC) {
+						if (initTime.nwcWrite.anyGt(ts_get_nwc(td))) {
+							EventNode.addEdge(initTime.nwcWrite.eventNode, thisEventNode);
 						}
 					}
 				}
@@ -4481,17 +3803,9 @@ public class WDCTool extends Tool implements BarrierListener<WDCBarrierState>, O
 					final CV wdc = ts_get_wdc(td);
 					wdc.max(initTime.wdcWrite);
 				}
-				if (hasUDP) {
-					final CV udp = ts_get_udp(td);
-					udp.max(initTime.udp);
-				}
 				if (hasWBR) {
 					final CV wbr = ts_get_wbr(td);
 					wbr.max(initTime.wbr);
-				}
-				if (hasLSHE) {
-					final CV lshe = ts_get_lshe(td);
-					lshe.max(initTime.lshe);
 				}
 			}
 		}

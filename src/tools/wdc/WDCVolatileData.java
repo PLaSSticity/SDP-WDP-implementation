@@ -53,16 +53,13 @@ public class WDCVolatileData {
 	public CV hbWrite;
 	public CV wcpRead;
 	public CV wcpWrite;
-	public CV nwcRead;
-	public CV nwcWrite;
+	public CVE nwcRead;
+	public CVE nwcWrite;
 	public CV wdcRead;
 	public CV wdcWrite;
-	public CVE udp;
 	public CVE wbr;
-	public CV lshe;
 	
 	public CV wbrWrites;
-	public CV udpWrites;
 	public VolatileRdWrNode[] lastWriteEvents;
 	public int lastWriter = NO_LAST_WRITER;
 
@@ -79,8 +76,8 @@ public class WDCVolatileData {
 			this.wcpWrite = new CV(WDCTool.INIT_CV_SIZE);
 		}
 		if (WDCTool.hasNWC) {
-			this.nwcRead = new CV(WDCTool.INIT_CV_SIZE);
-			this.nwcWrite = new CV(WDCTool.INIT_CV_SIZE);
+			this.nwcRead = new CVE(WDCTool.INIT_CV_SIZE, null);
+			this.nwcWrite = new CVE(WDCTool.INIT_CV_SIZE, null);
 		}
 		if (WDCTool.hasDC) {
 			this.wdcRead = new CV(WDCTool.INIT_CV_SIZE);
@@ -89,13 +86,6 @@ public class WDCVolatileData {
 		if (WDCTool.hasWBR) {
 			this.wbr = new CVE(new CV(WDCTool.INIT_CV_SIZE), null);
 			this.wbrWrites = new CV(WDCTool.INIT_CV_SIZE);
-		}
-		if (WDCTool.hasUDP) {
-			this.udp = new CVE(new CV(WDCTool.INIT_CV_SIZE), null);
-			this.udpWrites = new CV(WDCTool.INIT_CV_SIZE);
-		}
-		if (WDCTool.hasLSHE) {
-			this.lshe = new CV(WDCTool.INIT_CV_SIZE);
 		}
 		this.lastWriteEvents = new VolatileRdWrNode[RR.maxTidOption.get()];
 	}

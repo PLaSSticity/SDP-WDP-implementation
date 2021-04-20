@@ -55,19 +55,18 @@ public class WDCLockData {
 	public final CV hb;
 	public final CV wcp;
 	public final CV nwc;
+	public final CV xdp;
+	public final CV xdpAcquire;
 	public final CV wdc;
-	public final CV udp;
 	public final CV wbr;
-	public final CV lshe;
 	public HashSet<ShadowVar> readVars; // variables read during critical section
 	public HashSet<ShadowVar> writeVars; // variables written during critical section
 	public WeakIdentityHashMap<ShadowVar,CV> wcpReadMap;
 	public WeakIdentityHashMap<ShadowVar,CV> wcpWriteMap;
 	public WeakIdentityHashMap<ShadowVar,CV> nwcReadMap;
-	public WeakIdentityHashMap<ShadowVar,CV> nwcWriteMap;
+	public WeakIdentityHashMap<ShadowVar,CVE> nwcWriteMap;
 	public WeakIdentityHashMap<ShadowVar,CV> wdcReadMap;
 	public WeakIdentityHashMap<ShadowVar,CV> wdcWriteMap;
-	public WeakIdentityHashMap<ShadowVar,CVE> udpWriteMap;
 	public WeakIdentityHashMap<ShadowVar,CVE> wbrWriteMap;
 
 	public final HashMap<ShadowThread,ArrayDeque<CV>> wcpAcqQueueMap;
@@ -75,10 +74,12 @@ public class WDCLockData {
 	public final ArrayDeque<CV> wcpAcqQueueGlobal;
 	public final ArrayDeque<CV> wcpRelQueueGlobal;
 
-	public final HashMap<ShadowThread,ArrayDeque<CV>> nwcAcqQueueMap;
-	public final HashMap<ShadowThread,ArrayDeque<CV>> nwcRelQueueMap;
-	public final ArrayDeque<CV> nwcAcqQueueGlobal;
-	public final ArrayDeque<CV> nwcRelQueueGlobal;
+	public final HashMap<ShadowThread,ArrayDeque<CVE>> nwcAcqQueueMap;
+	public final HashMap<ShadowThread,ArrayDeque<CVE>> nwcRelQueueMap;
+	public final ArrayDeque<CVE> nwcAcqQueueGlobal;
+	public final ArrayDeque<CVE> nwcRelQueueGlobal;
+	public final HashMap<ShadowThread,ArrayDeque<CV>> xdpAcqQueueMap;
+	public final ArrayDeque<CV> xdpAcqQueueGlobal;
 
 	public final HashMap<ShadowThread,PerThreadQueue<CV>> wdcAcqQueueMap;
 	public final HashMap<ShadowThread,PerThreadQueue<CV>> wdcRelQueueMap;
@@ -89,11 +90,6 @@ public class WDCLockData {
 	public final HashMap<ShadowThread,PerThreadQueue<CVE>> wbrRelQueueMap;
 	public final PerThreadQueue<CVE> wbrAcqQueueGlobal;
 	public final PerThreadQueue<CVE> wbrRelQueueGlobal;
-
-	public final HashMap<ShadowThread,PerThreadQueue<CVE>> udpAcqQueueMap;
-	public final HashMap<ShadowThread,PerThreadQueue<CVE>> udpRelQueueMap;
-	public final PerThreadQueue<CVE> udpAcqQueueGlobal;
-	public final PerThreadQueue<CVE> udpRelQueueGlobal;
 
 	public EventNode latestRelNode;
 
@@ -160,22 +156,6 @@ public class WDCLockData {
 			this.wbrRelQueueGlobal = null;
 			this.wbrWriteMap = null;
 		}
-		
-		if (WDCTool.hasUDP) {
-			this.udp = new CV(WDCTool.INIT_CV_SIZE);
-			this.udpAcqQueueMap = new HashMap<>();
-			this.udpRelQueueMap = new HashMap<>();
-			this.udpAcqQueueGlobal = new PerThreadQueue<>();
-			this.udpRelQueueGlobal = new PerThreadQueue<>();
-			this.udpWriteMap = new WeakIdentityHashMap<>();
-		} else {
-			this.udp = null;
-			this.udpAcqQueueMap = null;
-			this.udpRelQueueMap = null;
-			this.udpAcqQueueGlobal = null;
-			this.udpRelQueueGlobal = null;
-			this.udpWriteMap = null;
-		}
 
 		if (WDCTool.hasNWC) {
 			this.nwc = new CV(WDCTool.INIT_CV_SIZE);
@@ -185,6 +165,10 @@ public class WDCLockData {
 			this.nwcRelQueueGlobal = new ArrayDeque<>();
 			this.nwcReadMap = new WeakIdentityHashMap<>();
 			this.nwcWriteMap = new WeakIdentityHashMap<>();
+			this.xdp = new CV(WDCTool.INIT_CV_SIZE);
+			this.xdpAcquire = new CV(WDCTool.INIT_CV_SIZE);
+			this.xdpAcqQueueMap = new HashMap<>();
+			this.xdpAcqQueueGlobal = new ArrayDeque<>();
 		} else {
 			this.nwc = null;
 			this.nwcAcqQueueMap = null;
@@ -193,12 +177,10 @@ public class WDCLockData {
 			this.nwcRelQueueGlobal = null;
 			this.nwcReadMap = null;
 			this.nwcWriteMap = null;
-		}
-
-		if (WDCTool.hasLSHE) {
-			this.lshe = new CV(WDCTool.INIT_CV_SIZE);
-		} else {
-			this.lshe = null;
+			this.xdp = null;
+			this.xdpAcquire = null;
+			this.xdpAcqQueueMap = null;
+			this.xdpAcqQueueGlobal = null;
 		}
 
 		latestRelNode = null;

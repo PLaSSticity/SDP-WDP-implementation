@@ -6,7 +6,7 @@ public class Figure3C {
      * This is Figure 3.c in the paper.
      * There is a predictable race on y.
      *
-     * WDP (WBR) and SDP (NWC) will find this race, other relations will miss it.
+     * WDP (WBR) will find this race, other relations will miss it.
      */
 
 

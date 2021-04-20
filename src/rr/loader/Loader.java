@@ -106,7 +106,7 @@ public class Loader {
 	protected static final Vector<String> sanityCheckedFiles = new Vector<String>();
 
 
-	public static void printXML(XMLWriter xml) {
+	public static void printXML(XMLWriter xml) {/* Causes crashes due to a concurrency bug. Just removing it since we don't even look at this output.
 		String r = "";
 
 		Collections.sort(instrumentedFiles);
@@ -131,7 +131,7 @@ public class Loader {
 			r += s + " ";
 		}
 		xml.print("sanityChecked", r + "");
-		xml.print("sanityCheckedNum", sanityCheckedFiles.size() + "");
+		xml.print("sanityCheckedNum", sanityCheckedFiles.size() + "");*/
 	}
 
 

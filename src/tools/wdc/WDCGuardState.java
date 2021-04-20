@@ -51,7 +51,7 @@ public class WDCGuardState implements ShadowVar {
 
 	public volatile CV hbRead;
 	public CV hbReadsJoined;
-	public volatile CV hbWrite;
+	public volatile CVE hbWrite;
 	public CV wcpRead;
 	public CV wcpReadsJoined;
 	public CV wcpWrite;
@@ -65,12 +65,6 @@ public class WDCGuardState implements ShadowVar {
 	public CV wbrRead;
 	public CV wbrReadsJoined;
 	public CV wbrWrite;
-	public CV udpRead;
-	public CV udpReadsJoined;
-	public CV udpWrite;
-	public CV lsheRead;
-	public CV lsheReadsJoined;
-	public CV lsheWrite;
 	public int lastWriteTid; // the thread of the last write
 
 	public DynamicSourceLocation[] lastReadEvents; 
@@ -89,7 +83,7 @@ public class WDCGuardState implements ShadowVar {
 		if (WDCTool.hasHB) {
 			hbRead = new CV(WDCTool.INIT_CV_SIZE);
 			hbReadsJoined = new CV(WDCTool.INIT_CV_SIZE);
-			hbWrite = new CV(WDCTool.INIT_CV_SIZE);
+			hbWrite = new CVE(WDCTool.INIT_CV_SIZE, null);
 		}
 		if (WDCTool.hasWCP) {
 			wcpRead = new CV(WDCTool.INIT_CV_SIZE);
@@ -112,17 +106,7 @@ public class WDCGuardState implements ShadowVar {
 			wbrReadsJoined = new CV(WDCTool.INIT_CV_SIZE);
 			wbrWrite = new CV(WDCTool.INIT_CV_SIZE);
 		}
-		if (WDCTool.hasUDP) {
-			udpRead = new CV(WDCTool.INIT_CV_SIZE);
-			udpReadsJoined = new CV(WDCTool.INIT_CV_SIZE);
-			udpWrite = new CV(WDCTool.INIT_CV_SIZE);
-		}
-		if (WDCTool.hasLSHE) {
-			lsheRead = new CV(WDCTool.INIT_CV_SIZE);
-			lsheReadsJoined = new CV(WDCTool.INIT_CV_SIZE);
-			lsheWrite = new CV(WDCTool.INIT_CV_SIZE);
-		}
-		if (WDCTool.hasWBR || WDCTool.hasUDP || WDCTool.hasLSHE) {
+		if (WDCTool.hasWBR) {
 			heldLocksRead = new HashMap<>();
 			heldLocksWrite = new HashMap<>();
 		}

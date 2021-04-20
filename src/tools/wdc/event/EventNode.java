@@ -18,6 +18,7 @@ import java.util.*;
 import java.util.Map.Entry;
 
 import static tools.wdc.WDCTool.NO_SDG;
+import static tools.wdc.WDCTool.hasWBR;
 
 
 public class EventNode implements Iterable<EventNode> {
@@ -120,7 +121,15 @@ public class EventNode implements Iterable<EventNode> {
 	}
 	
 	public static void addEdge(EventNode sourceNode, EventNode sinkNode) {
-		if (VERBOSE_GRAPH) Assert.assertTrue(sourceNode != sinkNode);
+		if (VERBOSE_GRAPH) {
+			// Avoid cycles
+			Assert.assertTrue(sourceNode != sinkNode);
+			Assert.assertFalse(containsNode(sourceNode.sourceOrSources, sinkNode));
+			Assert.assertFalse(containsNode(sinkNode.sinkOrSinks, sourceNode));
+			// TODO: Double edges happen, but they are not breaking bugs
+			//Assert.assertFalse(containsNode(sourceNode.sinkOrSinks, sinkNode));
+			//Assert.assertFalse(containsNode(sinkNode.sourceOrSources, sourceNode));
+		}
 		synchronized(sourceNode) {
 			sourceNode.sinkOrSinks = addNode(sourceNode.sinkOrSinks, sinkNode);
 		}
@@ -138,7 +147,6 @@ public class EventNode implements Iterable<EventNode> {
 			}
 		}
 		if (VERBOSE_GRAPH) {
-			Assert.assertFalse(sourceNode == sinkNode, "Edge source and sink are same, creates cycle on the same node!");
 			Assert.assertFalse(sourceNode.eventNumber == sinkNode.eventNumber && sourceNode.getThreadId() == sinkNode.getThreadId(),
 					"PO-ordered source and sink nodes have same event number!");
 		}
@@ -550,8 +558,11 @@ public class EventNode implements Iterable<EventNode> {
 		int gray = black - 1;
 		boolean secondCycleDetected;
 		if (useIterativeCycleDetection) {
-			secondCycleDetected = simplerIterativeDetectCycle(secondNode, false, gray, black, windowRange[0]/*windowMin*/, windowRange[1]/*windowMax*/);
-			//secondCycleDetected = iterativeDfsDetectCycle(secondNode, false, gray, black, windowMin, windowMax, secondCycleEdges);
+			if ( RR.wdcbGenerateFileForDetectedCycleOption.get() ) {
+				secondCycleDetected = iterativeDfsDetectCycle(secondNode, false, gray, black, windowRange[0]/*windowMin*/, windowRange[1]/*windowMax*/, secondCycleEdges);
+			} else {
+				secondCycleDetected = simplerIterativeDetectCycle(secondNode, false, gray, black, windowRange[0]/*windowMin*/, windowRange[1]/*windowMax*/);
+			}
 		} else {
 			secondCycleDetected = dfsDetectCycle(secondNode, false, gray, black, windowRange[0], windowRange[1]);
 		}
@@ -561,8 +572,11 @@ public class EventNode implements Iterable<EventNode> {
 		gray = black - 1;
 		boolean firstCycleDetected;
 		if (useIterativeCycleDetection) {
-			firstCycleDetected = simplerIterativeDetectCycle(firstNode, false, gray, black, windowRange[0]/*windowMin*/, windowRange[1]/*windowMax*/);
-			//firstCycleDetected = iterativeDfsDetectCycle(firstNode, false, gray, black, windowMin, windowMax, firstCycleEdges);
+			if ( RR.wdcbGenerateFileForDetectedCycleOption.get() ) {
+				firstCycleDetected = iterativeDfsDetectCycle(firstNode, false, gray, black, windowRange[0]/*windowMin*/, windowRange[1]/*windowMax*/, firstCycleEdges);
+			} else {
+				firstCycleDetected = simplerIterativeDetectCycle(firstNode, false, gray, black, windowRange[0]/*windowMin*/, windowRange[1]/*windowMax*/);
+			}
 		} else {
 			firstCycleDetected = dfsDetectCycle(firstNode, false, gray, black, windowRange[0], windowRange[1]);
 		}
@@ -591,13 +605,14 @@ public class EventNode implements Iterable<EventNode> {
 	 */
 	public static List<EventNode> constructReorderedTrace(RdWrNode firstNode, RdWrNode secondNode, Set<RdWrNode> coreReads, File commandDir, long[] windowRange) throws ReorderingTimeout {
 		// Backward Reordering if no cycle was found for the WBR race
-		Vector<EventNode> trPrime = new Vector<>(); // Provides constant time "contains" checks, preserves insertion order
-
+		Vector<EventNode> trPrime = null;
 
 		int total_random_reorders = RR.wdcRandomReorderings.get();
+		Assert.assertTrue(total_random_reorders >= 0);
 		if (total_random_reorders > 0) {Util.log("Doing " + (total_random_reorders + 1) + " reorderings");}
 
 		for (int reorders = 0; reorders <= total_random_reorders; reorders++) {
+			trPrime = new Vector<>();
 			String reorderName = reorderName(reorders);
 			reorderStartTime = System.currentTimeMillis();
 
@@ -1410,7 +1425,7 @@ public class EventNode implements Iterable<EventNode> {
 					if (currentAcc.isWrite()) {
 						Map<Integer, RdWrNode> firstWritePerThread = writeOfVarPerThread.computeIfAbsent(currentAcc.var, v -> new HashMap<>());
 						firstWritePerThread.merge(currentAcc.getThreadId(), currentAcc, (l, r) -> (l.eventNumber < r.eventNumber) ? l : r);
-					} else { // currentAcc is read
+					} else if (hasWBR) { // currentAcc is read
 						if (currentAcc.hasLastWriter() &&
 								(coreReads.contains(currentAcc) || currentAcc.eventNumber < windowRange[0]) || !WDCTool.graphHasBranches) {
 							// The last writer of the read may be unreachable by just using WBR edges.
@@ -1764,54 +1779,60 @@ public class EventNode implements Iterable<EventNode> {
 			printWriter.println("newrank=true");
 			printWriter.println("node [shape = circle];");
 	
-		    Map<Integer, List<EventNode>> threadIdToThreadEvents = new HashMap<>();
-		    Iterator it = edges.entrySet().iterator();
-		    while (it.hasNext()) {
-		    	Entry pair = (Entry)it.next();
-		    	addEventToItsThreadList(threadIdToThreadEvents, (EventNode)pair.getKey());
-		        for (EventNode eventNode : (List<EventNode>)pair.getValue()) {
-		        	addEventToItsThreadList(threadIdToThreadEvents, eventNode);
-		        }
+		    Map<Integer, SortedSet<EventNode>> threadIdToThreadEvents = new HashMap<>();
+		    // Breadth-first search, latter nodes to earlier nodes
+			PriorityQueue<EventNode> all_nodes = new PriorityQueue<>((left, right) -> right.eventNumber - left.eventNumber);
+			all_nodes.addAll(edges.keySet());
+		    edges.values().forEach(all_nodes::addAll);
+		    int i = 0;
+		    while (! all_nodes.isEmpty()) {
+		    	i++;
+		    	if (i > 10000) break;
+		    	EventNode node = all_nodes.poll();
+		    	addEventToItsThreadList(threadIdToThreadEvents, node);
+		        node.sourceOrSources.forEach(all_nodes::add);
 		    }
 
-		    it = threadIdToThreadEvents.entrySet().iterator();
+		    Iterator<Entry<Integer, SortedSet<EventNode>>> it = threadIdToThreadEvents.entrySet().iterator();
 		    while (it.hasNext()) {
-		    	Entry pair = (Entry)it.next();
-		    	printWriter.println("subgraph Cluster_" + (int)pair.getKey() + " {");
+		    	Entry<Integer, SortedSet<EventNode>> pair = it.next();
+		    	printWriter.println("subgraph Cluster_" + pair.getKey() + " {");
 		    	printWriter.println("label = T" + (int)pair.getKey());
-		        for (EventNode eventNode : (List<EventNode>)pair.getValue()) {
+		        for (EventNode eventNode : pair.getValue()) {
 		        	String nodeLabel = eventNode.getNodeLabel() + "- #" + eventNode.eventNumber;
 		        	printWriter.println( "node" + eventNode.eventNumber + " [label = \"" + nodeLabel + "\"];");
 		        }
 		        printWriter.println("}");
 		    }
 
-		    it = edges.entrySet().iterator();
+			it = threadIdToThreadEvents.entrySet().iterator();
 		    while (it.hasNext()) {
-		        Entry pair = (Entry)it.next();
-		        for (EventNode child : (List<EventNode>) pair.getValue()) {
-		        	long keyEventNumber = ((EventNode)pair.getKey()).eventNumber;
-		        	long tail = keyEventNumber;		        
-		        	long head = child.eventNumber;
-		        	if ( keyEventNumber > child.eventNumber ) {
-		        		tail = child.eventNumber;
-		        		head = keyEventNumber;
-		        	}
-			        printWriter.println("\"node" + tail + "\" -> \"node" + head + "\"" + 
-		        	(keyEventNumber > child.eventNumber ? " [dir=\"back\"]" : "") + ";");
+				Entry<Integer, SortedSet<EventNode>> pair = it.next();
+		        for (EventNode from: pair.getValue()) {
+					printWriter.println( "node" + from.eventNumber + " [label = \"" + from.toString() + "\"];");
+		        	for (EventNode to : from.sinkOrSinks) {
+						printWriter.println("\"node" + from.eventNumber + "\" -> \"node" + to.eventNumber + "\"" +
+								(from.eventNumber > to.eventNumber ? " [dir=\"back\"]" : "") + ";");
+						printWriter.println( "node" + to.eventNumber + " [label = \"" + to.toString() + "\"];");
+					}
 		        }
 		    }
-		    
-//		    it = threadIdToThreadEvents.entrySet().iterator();
-//		    while (it.hasNext()) {
-//		    	printWriter.print("{rank=same");
-//		    	Map.Entry pair = (Map.Entry)it.next();		        
-//		        for (Long eventNumber : (List<Long>)pair.getValue()) {
-//		        	printWriter.print(" node" + eventNumber);
-//		        }
-//		        printWriter.println("}");
-//		        
-//		    }
+
+			Iterator<Entry<EventNode, List<EventNode>>> it2 = edges.entrySet().iterator();
+			while (it2.hasNext()) {
+				Entry<EventNode, List<EventNode>> pair = it2.next();
+				for (EventNode child : pair.getValue()) {
+					long keyEventNumber = pair.getKey().eventNumber;
+					long tail = keyEventNumber;
+					long head = child.eventNumber;
+					if (keyEventNumber > child.eventNumber) {
+						tail = child.eventNumber;
+						head = keyEventNumber;
+					}
+					printWriter.println("\"node" + tail + "\" -> \"node" + head + "\"" +
+							(keyEventNumber > child.eventNumber ? " [dir=\"back\"]" : "") + ";");
+				}
+			}
 
 		    printWriter.println("}");
 		    printWriter.close();
@@ -1821,9 +1842,9 @@ public class EventNode implements Iterable<EventNode> {
 	}
 	
 
-	private static void addEventToItsThreadList(Map<Integer, List<EventNode>> threadIdToThreadEvents, EventNode eventNode) {
+	private static void addEventToItsThreadList(Map<Integer, SortedSet<EventNode>> threadIdToThreadEvents, EventNode eventNode) {
 		if (!threadIdToThreadEvents.containsKey(eventNode.getThreadId())) {
-			threadIdToThreadEvents.put(eventNode.getThreadId(), new ArrayList<EventNode>());
+			threadIdToThreadEvents.put(eventNode.getThreadId(), new TreeSet<>(Comparator.comparing((ev) -> ev.eventNumber)));
 		}
 		threadIdToThreadEvents.get(eventNode.getThreadId()).add(eventNode);
 	}

@@ -312,8 +312,6 @@ public class RRMain {
 		cl.add(rr.tool.RR.dcDCOption);
 		cl.add(rr.tool.RR.dcWCP_DCOption);
 		cl.add(rr.tool.RR.dcNWC_DCOption);
-		cl.add(rr.tool.RR.dcuDPOption);
-		cl.add(rr.tool.RR.dcWCP_uDPOption);
 		cl.add(rr.tool.RR.dcWBROption);
 		cl.add(rr.tool.RR.dcNWC_WBROption);
 		cl.add(rr.tool.RR.dcWCP_WBROption);
@@ -321,8 +319,6 @@ public class RRMain {
 		cl.add(rr.tool.RR.dcDC_WBROption);
 		cl.add(rr.tool.RR.dcWCP_NWC_DC_WBROption);
 		cl.add(rr.tool.RR.dcWCP_NWC_WBROption);
-		cl.add(rr.tool.RR.dcWCP_DC_uDP_WBROption);
-		cl.add(rr.tool.RR.dcWCP_DC_WBR_LSHEOption);
 		cl.addGroup("Goldilocks");
 		cl.add(rr.tool.RR.goldilocksTrainingDataDir);
 		cl.addGroup("BR");

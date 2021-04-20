@@ -90,9 +90,7 @@ class StaticRace {
 			case WCPRace: return WDCTool.hasWCP;
 			case NWCRace: return WDCTool.hasNWC;
 			case WDCRace: return WDCTool.hasDC;
-			case uDPRace: return WDCTool.hasUDP;
 			case WBRRace: return WDCTool.hasWBR;
-			case LSHERace: return WDCTool.hasLSHE;
 			case WBROrdered: return true;
 			default: return false;
 		}
@@ -100,7 +98,7 @@ class StaticRace {
 
 	static void reportRaces() {
 		for (RaceType type : RaceType.values()) {
-			if (type.isLSHERace()) { // ignore RaceType.WBROrdered
+			if (type.isWBRRace()) { // ignore RaceType.WBROrdered
 				//Static Count
 				int race_count = getStaticRaceCount(RaceType.HBRace);
 				if (type != RaceType.HBRace) {
@@ -110,13 +108,7 @@ class StaticRace {
 						if (type != RaceType.NWCRace) {
 							race_count += getStaticRaceCount(RaceType.WDCRace);
 							if (type != RaceType.WDCRace) {
-								race_count += getStaticRaceCount(RaceType.uDPRace);
-								if (type != RaceType.uDPRace) {
-									race_count += getStaticRaceCount(RaceType.WBRRace);
-									if (type != RaceType.WBRRace) {
-										race_count += getStaticRaceCount(RaceType.LSHERace);
-									}
-								}
+								race_count += getStaticRaceCount(RaceType.WBRRace);
 							}
 						}
 					}
@@ -132,13 +124,7 @@ class StaticRace {
 						if (type != RaceType.NWCRace) {
 							race_count += getDynamicRaceCount(RaceType.WDCRace);
 							if (type != RaceType.WDCRace) {
-								race_count += getDynamicRaceCount(RaceType.uDPRace);
-								if (type != RaceType.uDPRace) {
-									race_count += getDynamicRaceCount(RaceType.WBRRace);
-									if (type != RaceType.WBRRace) {
-										race_count += getDynamicRaceCount(RaceType.LSHERace);
-									}
-								}
+								race_count += getDynamicRaceCount(RaceType.WBRRace);
 							}
 						}
 					}
@@ -186,17 +172,9 @@ class StaticRace {
 			return (int)staticRaceMap.get(RaceType.WDCRace).keySet().stream().filter(
 					r -> !(r.isMinRace(RaceType.HBRace) || r.isMinRace(RaceType.WCPRace) || r.isMinRace(RaceType.NWCRace))
 			).count();
-		} else if (type == RaceType.uDPRace) {
-			return (int)staticRaceMap.get(RaceType.uDPRace).keySet().stream().filter(
-					r -> !(r.isMinRace(RaceType.HBRace) || r.isMinRace(RaceType.WCPRace) || r.isMinRace(RaceType.NWCRace) || r.isMinRace(RaceType.WDCRace))
-			).count();
 		} else if (type == RaceType.WBRRace) {
 			return (int)staticRaceMap.get(RaceType.WBRRace).keySet().stream().filter(
-					r -> !(r.isMinRace(RaceType.HBRace) || r.isMinRace(RaceType.WCPRace) || r.isMinRace(RaceType.NWCRace) || r.isMinRace(RaceType.WDCRace) || r.isMinRace(RaceType.uDPRace))
-			).count();
-		} else if (type == RaceType.LSHERace) {
-			return (int)staticRaceMap.get(RaceType.LSHERace).keySet().stream().filter(
-					r -> !(r.isMinRace(RaceType.HBRace) || r.isMinRace(RaceType.WCPRace) || r.isMinRace(RaceType.NWCRace) || r.isMinRace(RaceType.WDCRace) || r.isMinRace(RaceType.uDPRace) || r.isMinRace(RaceType.WBRRace))
+					r -> !(r.isMinRace(RaceType.HBRace) || r.isMinRace(RaceType.WCPRace) || r.isMinRace(RaceType.NWCRace) || r.isMinRace(RaceType.WDCRace))
 			).count();
 		}
 		return -1;
@@ -216,16 +194,8 @@ class StaticRace {
 		return secondNode.eventNumber - firstNode.eventNumber;
 	}
 
-	boolean isLSHERace() {
-		return raceType.isLSHERace();
-	}
-
 	boolean isWBRRace() {
 		return raceType.isWBRRace();
-	}
-
-	boolean isuDPRace() {
-		return raceType.isuDPRace();
 	}
 
 	boolean isWDCRace() {
@@ -250,21 +220,11 @@ enum RaceType {
 	WCPRace, // but HB ordered
 	NWCRace, // but WCP ordered
 	WDCRace, // but NWC ordered
-	uDPRace, // but WDC ordered
-	WBRRace, // but uDP ordered
-	LSHERace, // but WBR ordered
+	WBRRace, // but WDC ordered
 	WBROrdered;
-
-	boolean isLSHERace() {
-		return this.isWBRRace() || this.equals(LSHERace);
-	}
 	
 	boolean isWBRRace() {
-		return this.isuDPRace() || this.equals(WBRRace);
-	}
-
-	boolean isuDPRace() {
-		return this.isWDCRace() || this.equals(uDPRace);
+		return this.isWDCRace() || this.equals(WBRRace);
 	}
 
 	boolean isWDCRace() {
@@ -289,9 +249,7 @@ enum RaceType {
 		case WCPRace: return "WCP-race";
 		case NWCRace: return "NWC-race";
 		case WDCRace: return "WDC-race";
-		case uDPRace: return "uDP-race";
 		case WBRRace: return "WBR-race";
-		case LSHERace: return "LSHE-race";
 		case WBROrdered: return "WBR-ordered";
 		default: return null;
 		}
@@ -302,9 +260,7 @@ enum RaceType {
 		case WCPRace: return "WCP";
 		case NWCRace: return "NWC";
 		case WDCRace: return "WDC";
-		case uDPRace: return "uDP";
 		case WBRRace: return "WBR";
-		case LSHERace: return "LSHE";
 		default: return null;
 		}
 	}
